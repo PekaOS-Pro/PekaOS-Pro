@@ -1,0 +1,20 @@
+name = "mi-fudo-pro"
+main = "dist/index.js"
+compatibility_date = "2024-10-30"
+compatibility_flags = ["nodejs_compat"]
+
+[env.production]
+name = "mi-fudo-pro"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "mi-fudo-pro"
+database_id = "0d7b23b9-3872-43ca-b5c4-f47ce5a34cf4"
+
+[build]
+command = "npm run build"
+cwd = "."
+
+[env.production.routes]
+pattern = "example.com/*"
+zone_name = "example.com"

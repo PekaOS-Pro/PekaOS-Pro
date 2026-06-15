@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cocina - Peka Food</title>
+    <style>
+        body { background: #121212; color: #fff; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+        h1 { text-align: center; color: #ff6b6b; margin-bottom: 30px; }
+        .grid-cocina { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+        .tarjeta-pedido { background: #1e1e1e; padding: 20px; border-radius: 12px; border-left: 8px solid #ff6b6b; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .header-tarjeta { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; padding-bottom: 10px; }
+        h2 { margin: 0; color: #ff6b6b; }
+        .info { color: #ccc; font-size: 0.9rem; margin: 5px 0; }
+        .item-linea { font-size: 1.2rem; font-weight: bold; margin: 8px 0; padding: 5px; border-bottom: 1px solid #333; }
+    </style>
+</head>
+<body>
+
+    <h1>🖥️ Pedidos Pendientes</h1>
+    <div id="contenedor-pedidos" class="grid-cocina"></div>
+
+    <script>
+// Seguridad: Si no hay sesión activa, lo expulsa de inmediato al login
+if (!document.cookie.includes('sesion_activa=true')) {
+    window.location.href = '/login.html';
+}
+
+        const API_URL = '/api';
+
+        async function cargarPedidos() {
+            try {
+                const res = await fetch(`${API_URL}/pedidos`); 
+                const pedidos = await res.json();
+                
+                // Filtramos para mostrar solo los pendientes
+                const pendientes = pedidos.filter(p => p.estado !== 'finalizado');
+                
+                const contenedor = document.getElementById('contenedor-pedidos');
+
+                if (pendientes.length === 0) {
+                    contenedor.innerHTML = '<p style="text-align:center; color:#666; width: 100%; margin-top:50px;">Sin pedidos pendientes. ✅</p>';
+                    return;
+                }
+
+                // Renderizamos las tarjetas sin el botón
+                contenedor.innerHTML = pendientes.map(p => `
+                    <div class="tarjeta-pedido">
+                        <div class="header-tarjeta">
+                            <h2>#${p.id}</h2>
+                            <span style="font-size:0.8rem; background:#444; padding:2px 8px; border-radius:4px;">${p.tipo_pedido}</span>
+                        </div>
+                        <div class="info"><strong>Cliente:</strong> ${p.cliente_nombre || 'N/A'}</div>
+                        <div class="info"><strong>Dir:</strong> ${p.direccion || 'Retiro en Local'}</div>
+                        ${(p.items || []).map(i => `<div class="item-linea">✅ ${i.cantidad}x ${i.nombre}</div>`).join('')}
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error("Error cargando:", e);
+            }
+        }
+
+        // Mantenemos el auto-refresco para que el personal de cocina vea los pedidos en tiempo real
+        setInterval(cargarPedidos, 5000);
+        cargarPedidos();
+    </script>
+</body>
+</html>

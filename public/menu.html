@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú Principal</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-900 antialiased">
+
+    <div class="max-w-5xl mx-auto px-4 py-12">
+        
+        <header class="text-center mb-16">
+            <h1 class="text-4xl font-extrabold tracking-tight uppercase border-b-4 border-stone-900 inline-block pb-2">
+                Menú Principal
+            </h1>
+            <p class="text-stone-500 mt-3 text-sm tracking-wider uppercase">Sabor Auténtico & Calidad</p>
+        </header>
+
+        <main id="menu-container" class="space-y-16"></main>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. LÓGICA DE PROCESAMIENTO DE PEDIDOS
+        // ==========================================
+        function procesarComanda(id) {
+            let itemEncontrado = null;
+
+            // Buscamos el producto por su ID único dentro de tu JSON
+            menuData.categorias.forEach(cat => {
+                if (cat.items) {
+                    const found = cat.items.find(i => i.id === id);
+                    if (found) itemEncontrado = found;
+                } else if (cat.subcategorias) {
+                    cat.subcategorias.forEach(sub => {
+                        const found = sub.items.find(i => i.id === id);
+                        if (found) itemEncontrado = found;
+                    });
+                }
+            });
+
+            if (itemEncontrado) {
+                console.log("Producto detectado con éxito:", itemEncontrado);
+                // Por ahora disparamos una alerta nativa amigable
+                alert(`¡Agregado al pedido!\n\n🍣 ${itemEncontrado.nombre}\n💰 Precio: ${itemEncontrado.precio}`);
+            } else {
+                console.error("Error: No se encontró el ID", id);
+            }
+        }
+
+        // ==========================================
+        // 2. TU BASE DE DATOS COMPLETA (SIN RECORTE)
+        // ==========================================
+        const menuData = {
+          "categorias": [
+            {
+              "titulo": "Tablas",
+              "alerta": "",
+              "tipo": "tarjeta-lista",
+              "items": [
+                { "id": 1001, "nombre": "FULL CHICKEN (40 Piezas)", "precio": "$20.990", "detalles": ["Pollo - Queso Cream - Cebollín (Env. Palta) - (9 Cortes)", "Pollo - Palta (Envuelto en Sésamo) - (9 Cortes)", "Pollo - Queso Cream - Cebollín (Panko) - (10 Cortes)", "Pollo Panko (8 Unidades)", "Niguiri Crispy (4 Unidades)"] },
+                { "id": 1002, "nombre": "TABLA 2 (38 Piezas)", "precio": "$18.990", "detalles": ["Avo Sake - (8 Cortes)", "Maki Kani - (8 Cortes)", "Hoso Ebi - (6 Cortes)", "Chicken Panko - (8 Cortes)", "Pollo Panko - (4 Unidades)", "Salmon Panko - (4 Unidades)"] },
+                { "id": 1003, "nombre": "TABLA 3 (72 Piezas)", "precio": "$30.990", "detalles": ["Avo Sake - (8 Cortes)", "Maki Kani - (8 Cortes)", "Cream Chicken - (8 Cortes)", "Futo Sake - (10 Cortes)", "Hoso Ebi - (6 Cortes)", "Chicken Panko - (8 Cortes)", "Vegetal Panko - (8 Cortes)", "Pollo Panko - (8 Unidades)", "Salmon Panko - (8 Unidades)"] },
+                { "id": 1004, "nombre": "TABLA LIKE (50 Piezas)", "precio": "$21.990", "detalles": ["California Kani - (9 Cortes)", "Avo Chicken - (9 Cortes)", "Hoso Chicken Panko - (10 Cortes)", "Cream Vegetal - (9 Cortes)", "Vegetal Panko - (9 Cortes)", "Pollo Panko - (4 Unidades)"] },
+                { "id": 1005, "nombre": "TABLA HOT (34 Piezas)", "precio": "$19.990", "detalles": ["Ebi Panko - (8 Cortes)", "Vegetal Panko - (8 Cortes)", "Hoso Chicken Panko - (10 Cortes)", "Pollo Panko - (8 Unidades)"] },
+                { "id": 1006, "nombre": "TABLA VEGAN (32 Piezas)", "precio": "$16.990", "detalles": ["California Vegetal - (8 Cortes)", "Vegan Panko - (8 Cortes)", "Avo Fresh - (8 Cortes)", "Ura Vegan (envueltos en amapola) - (8 Unidades)"] }
+              ]
+            },
+            {
+              "titulo": "Super Promos",
+              "alerta": "SUPER PROMOS NO TIENEN CAMBIO",
+              "tipo": "tarjeta-lista",
+              "items": [
+                { "id": 1101, "nombre": "SUPER 1 (30 piezas)", "precio": "$14.990", "detalles": ["1 Pollo Teriyaki - Queso Cream - Cebollín (Env. Palta)", "1 Kanikama - Palta - Pimentón (Env. Sésamo)", "1 Camarón - Queso Cream - Palta (Panko)", "Incluye: 1 Soya, 1 Unagui, 2 Palitos"] },
+                { "id": 1102, "nombre": "SUPER 2 (50 piezas)", "precio": "$19.990", "detalles": ["1 Pollo Teriyaki - Queso Cream - Cebollín (Env. Palta)", "1 Kanikama - Palta - Pimentón (Env. Sésamo)", "1 Pollo Teriyaki - Queso Cream - Cebollín (Env. Amapola)", "1 Camarón - Queso Cream - Palta (Panko)", "1 Palta - Palmito - Pimentón (Panko)", "Incluye: 2 Soya, 1 Unagui, 3 Palitos"] },
+                { "id": 1103, "nombre": "SUPER 3 (70 piezas)", "precio": "$27.990", "detalles": ["1 Pollo Teriyaki - Queso Cream - Cebollín (Env. Palta)", "1 Kanikama - Palta - Pimentón (Env. Sésamo)", "1 Pollo Teriyaki - Queso Cream - Cebollín (Env. Amapola)", "1 Palmito - Espárrago - Cebollín (Env. Queso Cream)", "1 Camarón - Queso Cream - Palta (Panko)", "1 Palta - Palmito - Pimentón (Panko)", "1 Pollo Teriyaki - Queso Cream - Cebollín (Panko)", "Incluye: 3 Soya, 2 Unagui, 4 Palitos"] }
+              ]
+            },
+            {
+              "titulo": "Rolls",
+              "esGrupo": true,
+              "subcategorias": [
+                {
+                  "titulo": "Tempuras / Panko",
+                  "alerta": "Roll de 8 Cortes Fritos en Tempura y Panko",
+                  "items": [
+                    { "id": 1201, "nombre": "KANI PANKO", "precio": "$5.300", "descripcion": "Kanikama - Queso Cream - Pimentón", "alias": "T/P N°1" },
+                    { "id": 1202, "nombre": "CHICKEN PANKO", "precio": "$5.800", "descripcion": "Pollo Teriyaki - Queso Cream - Cebollín", "alias": "T/P N°2" },
+                    { "id": 1203, "nombre": "SAKE PANKO", "precio": "$6.300", "descripcion": "Salmón - Queso Cream - Ciboulette", "alias": "T/P N°3" },
+                    { "id": 1204, "nombre": "EBI PANKO", "precio": "$5.900", "descripcion": "Camarón - Queso Cream - Cebollín", "alias": "T/P N°4" },
+                    { "id": 1205, "nombre": "TAKO PANKO", "precio": "$6.500", "descripcion": "Pulpo - Queso Cream - Ciboulette", "alias": "T/P N°5" },
+                    { "id": 1206, "nombre": "VEGETAL PANKO", "precio": "$5.400", "descripcion": "Espárrago - Pimentón - Palta", "alias": "T/P N°6" },
+                    { "id": 1207, "nombre": "SMOKE PANKO", "precio": "$5.900", "descripcion": "Salmón Ahumado - Queso Cream - Cebollín", "alias": "T/P N°7" },
+                    { "id": 1208, "nombre": "MIX PANKO", "precio": "$6.500", "descripcion": "Camarón - Salmón - Queso Cream - Cebollín", "alias": "T/P N°8" },
+                    { "id": 1209, "nombre": "VEGAN PANKO", "precio": "$5.500", "descripcion": "Palta - Tomate Cherry - Choclo Baby", "alias": "T/P N°9" },
+                    { "id": 1210, "nombre": "CHICKEN NUSS PANKO", "precio": "$6.100", "descripcion": "Pollo Teriyaki - Queso Cream - Nueces / Almendras", "alias": "T/P N°10" },
+                    { "id": 1211, "nombre": "EBI PANKO 2.0", "precio": "$6.300", "descripcion": "Camarón - Queso Cream - Palta", "alias": "T/P N°11" },
+                    { "id": 1212, "nombre": "SEA BOMB", "precio": "$7.400", "descripcion": "Camarón - Salmón - Pulpo - Queso Cream - Ciboulette", "alias": "T/P N°12" },
+                    { "id": 1213, "nombre": "CHICKEN PANKO 2.0", "precio": "$6.200", "descripcion": "Pollo Teriyaki - Queso Cream - Palta", "alias": "T/P N°13" },
+                    { "id": 1214, "nombre": "MAGURO PANKO", "precio": "$6.400", "descripcion": "Atún - Queso Cream - Cebollín", "alias": "T/P N°14" },
+                    { "id": 1215, "nombre": "PANKO ACEVICHADO", "precio": "$9.500", "descripcion": "Queso Cream - Palta", "alias": "T/P N°15" }
+                  ]
+                },
+                {
+                  "titulo": "Avocado Rolls",
+                  "alerta": "Roll de 8 Cortes Envuelto en Palta",
+                  "items": [
+                    { "id": 1301, "nombre": "AVO KANI", "precio": "$5.400", "descripcion": "Kanikama - Queso Cream - Cebollín", "alias": "AVO N°1" },
+                    { "id": 1302, "nombre": "AVO CHICKEN", "precio": "$6.200", "descripcion": "Pollo Teriyaki - Queso Cream - Cebollín", "alias": "AVO N°2" },
+                    { "id": 1303, "nombre": "AVO SAKE", "precio": "$6.500", "descripcion": "Salmón - Queso Cream - Ciboulette", "alias": "AVO N°3" },
+                    { "id": 1304, "nombre": "AVO EBI", "precio": "$6.400", "descripcion": "Camarón - Queso Cream - Cebollín", "alias": "AVO N°4" },
+                    { "id": 1305, "nombre": "TAKO ROLL", "precio": "$6.600", "descripcion": "Pulpo - Queso Cream - Cebollín", "alias": "AVO N°5" },
+                    { "id": 1306, "nombre": "AVO FRESH", "precio": "$5.200", "descripcion": "Palmito - Espárrago - Cebollín", "alias": "AVO N°6" },
+                    { "id": 1307, "nombre": "TERI PANKO", "precio": "$6.500", "descripcion": "Pollo Panko - Queso Cream - Cebollín", "alias": "AVO N°7" },
+                    { "id": 1308, "nombre": "AVO SAKE PANKO", "precio": "$6.900", "descripcion": "Salmón Panko - Queso Cream - Cebollín", "alias": "AVO N°8" },
+                    { "id": 1309, "nombre": "AVO EBI TEMPURA", "precio": "$6.700", "descripcion": "Camarón Tempura - Queso Cream - Ciboulette", "alias": "AVO N°9" },
+                    { "id": 1310, "nombre": "AVO SMOKE ROLL", "precio": "$6.200", "descripcion": "Salmón Ahumado - Queso Cream - Cebollín", "alias": "AVO N°10" },
+                    { "id": 1311, "nombre": "AVO MIX", "precio": "$7.200", "descripcion": "Salmón - Camarón - Queso Cream - Cebollín", "alias":("AVO N°11")},
+                    { "id": 1312, "nombre":"AVO TROPICAL","precio":"$6.600","descripcion":"Salmón - Mango","alias":"AVOP N°12"},
+                    { "id": 1313, "nombre": "EBI LIKE", "precio": "$6.200", "descripcion": "Camarón - Queso Cream - Masago", "alias": "AVO N°13" },
+                    { "id": 1314, "nombre": "AVO TONNO", "precio": "$6.400", "descripcion": "Atún - Queso Cream - Cebollín", "alias": "AVO N°14" },
+                    { "id": 1315, "nombre": "AVO LIKE ROLL", "precio": "$6.300", "descripcion": "Salmón - Palmito - Espárrago", "alias": "AVOP N°15" },
+                    { "id": 1316, "nombre": "AVO VEGETAL PANKO", "precio": "$5.400", "descripcion": "Cebollín Panko - Queso Cream - Pimentón", "alias": "AVO N°16" },
+                    { "id": 1317, "nombre": "AVO ACEVICHADO", "precio": "$9.100", "descripcion": "Queso Cream - Espárrago - Palmito", "alias": "AVO N°17" }
+                  ]
+                },
+                {
+                  "titulo": "Uramaki Rolls",
+                  "alerta": "Roll de 8 Cortes Envuelto en Sésamo, Amapola o Coco / Merquén",
+                  "items": [
+                    { "id": 1401, "nombre": "CALIFORNIA KANI", "precio": "$4.400", "descripcion": "Kanikama - Palta", "alias": "URA N°1" },
+                    { "id": 1402, "nombre": "CALIFORNIA CHICKEN", "precio": "$4.800", "descripcion": "Pollo Teriyaki - Palta", "alias": "URA N°2" },
+                    { "id": 1403, "nombre": "CALIFORNIA SAKE", "precio": "$5.300", "descripcion": "Salmón - Palta", "alias": "URA N°3" },
+                    { "id": 1404, "nombre": "CALIFORNIA EBI", "precio": "$4.900", "descripcion": "Camarón - Palta", "alias": "URA N°4" },
+                    { "id": 1405, "nombre": "CALIFORNIA VEGETAL", "precio": "$4.700", "descripcion": "Palmito - Palta - Ciboulette - Espárrago", "alias": "URA N°5" },
+                    { "id": 1406,"nombre":"MAKI EBI TEMPURA","precio":"$5.900","descripcion":"Camarón Tempura - Queso Cream - Ciboulette","alias":"URA N°6"},
+                    { "id": 1407, "nombre": "MAKI YAKI PANKO", "precio": "$5.500", "descripcion": "Pollo Panko - Queso Cream - Cebollín", "alias": "URA N°7" },
+                    { "id": 1408, "nombre": "MAKI SAKE PANKO", "precio": "$5.900", "descripcion": "Salmón Panko - Queso Cream - Cebollín", "alias": "URA N°8" },
+                    { "id": 1409, "nombre": "SMOKE MAKI", "precio": "$5.200", "descripcion": "Salmón Ahumado - Queso Cream - Cebollín", "alias": "URA N°9" },
+                    { "id": 1410, "nombre": "MAKI KANI", "precio": "$4.700", "descripcion": "Kanikama - Queso Cream - Palta", "alias": "URA N°10" },
+                    { "id": 1411, "nombre": "MAKI YAKI", "precio": "$5.300", "descripcion": "Pollo Teriyaki - Queso Cream - Palta","alias":"URA N°11"},
+                    { "id": 1412,"nombre":"SAKE MAKI","precio":"$5.700","descripcion":"Salmón - Queso Cream - Palta","alias":"URA N°12"},
+                    { "id": 1413, "nombre": "EBI MAKI", "precio": "$5.400", "descripcion": "Camarón - Queso Cream - Palta - Ciboulette", "alias": "URA N°13" },
+                    { "id": 1414, "nombre": "TAKO MAKI ROLL", "precio": "$5.900", "descripcion": "Pulpo - Palta - Ciboulette", "alias": "URA N°14" },
+                    { "id": 1415, "nombre": "EBI SPICY", "precio": "$5.000", "descripcion": "Camarón - Palta - Ciboulette - Sriracha", "alias": "URA N°15" },
+                    { "id": 1416, "nombre": "MAGURO MAKI", "precio": "$5.500", "descripcion": "Atún - Palta - Ciboulette", "alias": "URA N°16" },
+                    { "id": 1417, "nombre": "URA VEGAN", "precio": "$4.400", "descripcion": "Palta - Pepino - Cebollín", "alias": "URA N°17" },
+                    { "id": 1418,"nombre":"URA ACEVICHADO","precio":"$8.500","descripcion":"Queso Cream - Palmito - Palta","alias":"URA N°18"}
+                  ]
+                },
+                {
+                  "titulo": "Cream Rolls",
+                  "alerta": "Roll de 8 Cortes Envuelto en Queso Cream",
+                  "items": [
+                    { "id": 1501, "nombre": "CREAM KANI", "precio": "$5.000", "descripcion": "Kanikama - Palta", "alias": "CREAM N°1" },
+                    { "id": 1502, "nombre": "CREAM CHICKEN", "precio": "$5.600", "descripcion": "Pollo Teriyaki - Palta - Cebollín", "alias": "CREAM N°2" },
+                    { "id": 1503, "nombre": "CREAM SAKE", "precio": "$6.200", "descripcion": "Salmón - Palta - Ciboulette", "alias": "CREAM N°3" },
+                    { "id": 1504, "nombre": "CREAM EBI", "precio": "$5.800", "descripcion": "Camarón - Ciboulette - Palta", "alias": "CREAM N°4" },
+                    { "id": 1505, "nombre": "TAKO SNOW", "precio": "$6.300", "descripcion": "Pulpo - Palta - Pimentón", "alias": "CREAM N°5" },
+                    { "id": 1506, "nombre": "SNOW EBI PANKO", "precio": "$6.300", "descripcion": "Camarón Panko - Palta - Cebollín", "alias": "CREAM N°6"},
+                    { "id": 1507, "nombre": "SNOW SAKE TEMPURA", "precio": "$6.400", "descripcion": "Salmón Tempura - Espárrago - Pimentón", "alias": "CREAM N°7" },
+                    { "id": 1508, "nombre": "SNOW YAKI PANKO", "precio": "$6.100", "descripcion": "Pollo Panko - Palta - Cebollín", "alias": "CREAM N°8" },
+                    { "id": 1509, "nombre": "SNOW TROPICAL", "precio": "$6.400", "descripcion": "Camarón Panko - Mango", "alias": "CREAM N°9" },
+                    { "id": 1510, "nombre": "CREAM CHILI", "precio": "$6.000", "descripcion": "Salmón - Coco/Merken - Pimentón - Cebollín", "alias": "CREAM N°10" },
+                    { "id": 1511,"nombre":"SNOW MIX","precio":"$6.000","descripcion":"Camarón - Salmón - Palta - Cebollín","alias":"CREAM N°11"},
+                    { "id": 1512, "nombre": "CREAM SMOKE", "precio": "$5.700", "descripcion": "Salmón Ahumado - Palta - Cebollín","alias":"CREAM N°12"},
+                    { "id": 1513,"nombre":"CREAM LIKE","precio":"$5.500","descripcion":"Masago - Palmito - Palta","alias":"CREAM N°13"},
+                    { "id": 1514,"nombre":"CREAM VEGETAL","precio":"$5.000","descripcion":"Palmito - Espárrago - Cebollín","alias":"CREAM N°14"},
+                    { "id": 1515,"nombre":"CREAM VEGETAL PANKO","precio":"$5.100","descripcion":"Cebollín Panko - Palta - Pimentón","alias":"CREAM N°15"},
+                    { "id": 1516,"nombre":"TUNA CREAM","precio":"$6.100","descripcion":"Atún - Palta - Palmito","alias":"CREAM N°16"},
+                    {"id": 1517,"nombre": "CREAM ACEVICHADO","precio": "$8.900","descripcion":"Palta - Espárrago - Palmito","alias": "CREAM N°17"}
+                  ]
+                },
+                {
+                  "titulo": "Sake Rolls",
+                  "alerta": "Roll de 8 Cortes Envuelto en Salmón",
+                  "items": [
+                    { "id": 1601, "nombre": "SAKE KANI", "precio": "$5.900", "descripcion": "Kanikama - Palta - Ciboulette", "alias": "SAKE N°1" },
+                    { "id": 1602, "nombre": "SAKE EBI ROLL", "precio": "$6.400", "descripcion": "Camarón - Queso Cream - Masago", "alias": "SAKE N°2" },
+                    { "id": 1603, "nombre": "SAKE TAKO", "precio": "$7.000", "descripcion": "Pulpo - Queso Cream - Cebollín", "alias": "SAKE N°3" },
+                    { "id": 1604, "nombre": "GARDEN SAKE", "precio": "$5.800", "descripcion": "Palmito - Espárrago - Palta", "alias": "SAKE N°4" },
+                    { "id": 1605, "nombre": "SAKE SMOKE", "precio": "$6.500", "descripcion": "Salmón Ahumado - Queso Cream - Palta", "alias": "SAKE N°5" },
+                    { "id": 1606,"nombre":"SAKE EBI PANKO","precio":"$6.900","descripcion":"Camarón Panko - Queso Cream - Cebollín","alias":"SAKE N°6"},
+                    { "id": 1607, "nombre": "SAKE ACEVICHADO", "precio": "$9.200", "descripcion": "Queso Cream - Palta - Palmito", "alias": "SAKE N°7" },
+                    { "id": 1608, "nombre": "SAKE VEGETAL PANKO", "precio": "$5.900", "descripcion": "Cebollín Panko - Queso Cream - Espárrago", "alias": "SAKE N°8" }
+                  ]
+                },
+                {
+                  "titulo": "Rolls Sin Arroz",
+                  "alerta": "Rolls de 8 cortes, 5 ingredientes y sin arroz",
+                  "items": [
+                    { "id": 1701, "nombre": "Sin Arroz Opción 1", "precio": "$7.900", "descripcion": "Salmón - Camarón - Queso Cream - Cebollín - Choclo Baby Panko (Envuelto en Palta)", "alias": "SIN N°1" },
+                    { "id": 1702, "nombre": "Sin Arroz Opción 2", "precio": "$7.500", "descripcion": "Pollo Panko - Palta - Palmito - Cebollín - Pimentón (Envuelto en Queso Cream)", "alias": "SIN N°2" },
+                    { "id": 1703, "nombre": "Sin Arroz Opción 3", "precio": "$8.000", "descripcion": "Camarón Panko - Queso Cream - Masago - Palta - Cebollín (Envuelto en Salmón)", "alias": "SIN N°3" },
+                    { "id": 1704, "nombre": "Sin Arroz Opción 4", "precio": "$7.600", "descripcion": "Pollo Teriyaki - Palta - Nueces - Almendras - Queso Cream - Cebollín (Env. Panko)", "alias": "SIN N°4" },
+                    { "id": 1705, "nombre": "Sin Arroz Opción 5", "precio": "$8.100", "descripcion": "Camarón - Salmón - Queso Cream - Palta - Cebollín (Envuelto en Panko)", "alias": "SIN N°5" }
+                  ]
+                },
+                {
+                  "titulo": "Hosomaki",
+                  "alerta": "Roll de 6 Cortes Envuelto en Alga Nori",
+                  "items": [
+                    { "id": 1801, "nombre": "HOSO KANI", "precio": "$3.200", "descripcion": "Kanikama - Palta", "alias": "HOSO N°1" },
+                    { "id": 1802, "nombre": "HOSO CHICKEN", "precio": "$3.600", "descripcion": "Pollo Teriyaki - Queso Cream - Cebollín", "alias": "HOSO N°2" },
+                    { "id": 1803, "nombre": "HOSO SAKE", "precio": "$3.900", "descripcion": "Salmón - Queso Cream", "alias": "HOSO N°3" },
+                    { "id": 1804, "nombre": "HOSO EBI", "precio": "$3.700", "descripcion": "Camarón - Queso Cream - Ciboulette", "alias": "HOSO N°4" },
+                    { "id": 1805, "nombre": "HOSO TAKO", "precio": "$4.400", "descripcion": "Pulpo - Queso Cream - Cebollín", "alias": "HOSO N°5" },
+                    { "id": 1806,"nombre":"HOSO SMOKE","precio":"$3.800","descripcion":"Salmón Ahumado - Palta - Ciboulette","alias":"HOSO N°6"},
+                    { "id": 1807,"nombre":"HOSO VEGETAL","precio":"$3.100","descripcion":"Palmito - Espárrago","alias":"HOSO N°7"},
+                    { "id": 1808,"nombre":"HOSO TON","precio":"$4.100","descripcion":"Atún - Palta","alias":"HOSO N°8"}
+                  ]
+                },
+                {
+                  "titulo": "Futomaki",
+                  "alerta": "Roll Gigante de 10 Cortes Envuelto en Alga Nori",
+                  "items": [
+                    { "id": 1901, "nombre": "FUTO KANI", "precio": "$5.800", "descripcion": "Kanikama - Palta - Pepino - Masago - Cebollín", "alias": "FUTO N°1" },
+                    { "id": 1902, "nombre": "FUTO CHICKEN", "precio": "$6.500", "descripcion": "Pollo Teriyaki - Queso Cream - Palta - Pimentón - Ciboulette", "alias": "FUTO N°2" },
+                    { "id": 1903, "nombre": "FUTO SAKE", "precio": "$6.800", "descripcion": "Salmón - Palmito - Palta - Cebollín - Pimentón", "alias": "FUTO N°3" },
+                    { "id": 1904, "nombre": "FUTO EBI", "precio": "$6.600", "descripcion": "Camarón - Queso Cream - Masago - Palta - Ciboulette", "alias": "FUTO N°4" },
+                    { "id": 1905, "nombre": "FUTO TAKO", "precio": "$6.900", "descripcion": "Pulpo - Queso Cream - Palta - Cebollín - Pimentón", "alias": "FUTO N°5" },
+                    { "id": 1906, "nombre": "FUTO MIX", "precio": "$7.000", "descripcion": "Salmón - Camarón - Palta - Queso Cream - Cebollín", "alias": "FUTO N°6" },
+                    { "id": 1907, "nombre": "FUTO ACEVICHADO", "precio": "$9.000","descripcion":"Queso Cream - Masago - Palta - Palmito","alias":"FUTO N°7"},
+                    { "id": 1908, "nombre": "FUTO SMOKE", "precio": "$6.400", "descripcion": "Salmón Ahumado - Palta - Pimentón - Ciboulette - Espárrago", "alias": "FUTO N°8" },
+                    { "id": 1909, "nombre": "FUTO VEGETAL PANKO", "precio": "$5.700", "descripcion": "Cebollín Panko - Queso Cream - Espárrago - Pimentón - Ciboulette", "alias": "FUTO N°9" }
+                  ]
+                },
+                {
+                  "titulo": "Special Rolls",
+                  "alerta": "Variedades de Rolls, Especialidades de la casa.",
+                  "items": [
+                    { "id": 2001, "nombre": "LIKE EBI TEMPURA", "precio": "$5.800", "descripcion": "Camarón - Queso Cream - Ciboulette (Envuelto en Tempura, 8 Cortes)", "alias": "SPECIAL N°1" },
+                    { "id": 2002, "nombre": "LIKE URA EBI", "precio": "$6.300", "descripcion": "Camarón Tempura - Queso Cream - Pimentón (Envuelto en Masago, 8 Cortes)", "alias": "SPECIAL N°2" },
+                    { "id": 2003, "nombre": "HOSO CHICKEN PANKO", "precio": "$6.000", "descripcion": "Pollo Teriyaki - Queso Cream - Cebollín (Envuelto en Nori/Panko, 10 Cortes)", "alias": "SPECIAL N°3" },
+                    { "id": 2004, "nombre": "MAKI GRAY ROLL", "precio": "$4.500", "descripcion": "Queso Cream - Palta - Pepino (Envuelto en Amapola, 8 Cortes)", "alias": "SPECIAL N°4" },
+                    { "id": 2005, "nombre": "ARMY SMOKE ROLL", "precio": "$5.300", "descripcion": "Salmón Ahumado - Queso Cream - Palta (Envuelto en Sésamo/Ciboulette, 8 Cortes)", "alias": "SPECIAL N°5" },
+                    { "id": 2006, "nombre": "LIKE EBI AVO", "precio": "$6.200", "descripcion": "Camarón - Queso Cream - Palmito (Envuelto en Palta, 8 Cortes)", "alias": "SPECIAL N°6" },
+                    { "id": 2007, "nombre": "HOSO NUSS", "precio": "$4.000", "descripcion": "Queso Cream - Nueces/Almendra (Envuelto en Nori/Tempura, 6 Cortes)", "alias": "SPECIAL N°7" },
+                    { "id": 2008, "nombre": "LIKE AVO CHICKEN", "precio": "$6.500", "descripcion": "Pollo Teriyaki - Queso Cream - Palmito (Envuelto en Palta, 8 Cortes)", "alias": "SPECIAL N°8" },
+                    { "id": 2009, "nombre": "GREEN TONNO FURAI", "precio": "$6.200", "descripcion": "Atún Panko - Queso Cream (Envuelto en Ciboulette, 8 Cortes)", "alias": "SPECIAL N°9" },
+                    { "id": 2010, "nombre": "EBI RAINBOW", "precio": "$8.000", "descripcion": "Camarón Panko - Queso Cream - Cebollín (Envuelto en Palta/Salmón, 8 Cortes)", "alias": "SPECIAL N°10" },
+                    { "id": 2011, "nombre": "SAKE EBI GRILL","precio":"$6.500","descripcion":"Camarón - Queso Cream - Cebollín (Envuelto en Salmón Grillado, 8 Cortes)","alias":"SPECIAL N°11"},
+                    { "id": 2012,"nombre":"COCO TEMPURA","precio":"$6.500","descripcion":"Salmón - Queso Cream - Pimentón (Envuelto en Tempura/Coco, 8 Cortes)","alias":"SPECIAL N°12"},
+                    { "id": 2013,"nombre":"GREEN MIX","precio":"$6.400","descripcion":"Salmón - Camarón - Queso Cream (Envuelto en Ciboulette, 8 Cortes)","alias":"SPECIAL N°13"},
+                    { "id": 2014,"nombre":"CHICKEN CRISPY NUSS","precio":"$7.400","descripcion":"Pollo Teriyaki - Queso Cream Panko - Ciboulette (Envuelto en Nuez/Almendra, 8 Cortes)","alias":"SPECIAL N°14"}
+                  ]
+                }
+              ]
+            },
+            {
+              "titulo": "Arroz Gohan",
+              "items": [
+                { "id": 2101, "nombre": "Gohan Mixto", "precio": "$6.990", "descripcion": "" },
+                { "id": 2102, "nombre": "Gohan Mixto Panko", "precio": "$7.990", "descripcion": "" },
+                { "id": 2103, "nombre": "Gohan Pollo", "precio": "$6.990", "descripcion": "" },
+                { "id": 2104, "nombre": "Gohan Pollo Panko", "precio": "$7.990", "descripcion": "" },
+                { "id": 2105, "nombre": "Gohan Vegetal", "precio": "$5.490", "descripcion": "" }
+              ]
+            },
+            {
+              "titulo": "Handroll",
+              "items": [
+                { "id": 2201, "nombre": "Handroll Pollo", "precio": "$4.500", "descripcion": "Pollo - Queso - Cebolllín" },
+                { "id": 2203, "nombre": "Handroll Camarón", "precio": "$4.800", "descripcion": "Camarón - Queso - Cebolllín" },
+                { "id": 2204, "nombre": "Handroll Vegetal", "precio": "$4.300", "descripcion": "Verduras - Palmito - Palta - Cebollín" }
+              ]
+            },
+            {
+              "titulo": "Sushi Burger",
+              "items": [
+                { "id": 2301, "nombre": "Burger Pollo", "precio": "$7.490", "descripcion": "Pollo - Queso - Palta - Cebolllín - (Frita en Panko)" },
+                { "id": 2302, "nombre": "Burger Camarón", "precio": "$7.990", "descripcion": "Camarón - Queso - Palta - Cebolllín - (Frita en Panko)" },
+                { "id": 2303, "nombre": "Burger Salmón", "precio": "$8.490", "descripcion": "Salmón - Queso - Palta - Cebolllín - (Frita en Panko)" }
+              ]
+            },
+            {
+              "titulo": "Sashimis",
+              "items": [
+                { "id": 2401, "nombre": "Sashimi de Salmón (3 Cortes)", "precio": "$2.800", "descripcion": "" },
+                { "id": 2402, "nombre": "Sashimi de Salmón (6 Cortes)", "precio": "$5.000", "descripcion": "" },
+                { "id": 2403, "nombre": "Sashimi de Salmón (12 Cortes)", "precio": "$9.000", "descripcion": "" },
+                { "id": 2404, "nombre": "Sashimi de Pulpo (3 Cortes)", "precio": "$3.400", "descripcion": "" },
+                { "id": 2405, "nombre": "Sashimi de Pulpo (6 Cortes)", "precio": "$6.000", "descripcion": "" },
+                { "id": 2406, "nombre": "Sashimi de Pulpo (12 Cortes)", "precio": "$10.500", "descripcion": "" }
+              ]
+            },
+            {
+              "titulo": "Nigiris",
+              "items": [
+                { "id": 2501, "nombre": "Nigiri de Salmón (1 Unidad)", "precio": "$1.000", "descripcion": "" },
+                { "id": 2502, "nombre": "Nigiri de Camarón (1 Unidad)", "precio": "$1.000", "descripcion": "" },
+                { "id": 2503, "nombre": "Nigiri de Kanikama (1 Unidad)", "precio": "$900", "descripcion": "" }
+              ]
+            },
+            {
+              "titulo": "Nigiris Crispy",
+              "items": [
+                { "id": 2601, "nombre": "Nigiris Crispy Pollo (4 Unidades)", "precio": "$4.790", "descripcion": "Mezcla de arroz - Pollo - Queso Cream - Cebollín" },
+                { "id": 2602, "nombre": "Nigiris Crispy Camarón (4 Unidades)", "precio": "$4.990", "descripcion": "Mezcla de arroz - Camarón - Queso Cream - Cebollín" }
+              ]
+            },
+            {
+              "titulo": "Snack Tempurizados",
+              "items": [
+                { "id": 2701, "nombre": "Salmón Panko (3 Unidades)", "precio": "$3.000", "descripcion": "" },
+                { "id": 2702, "nombre": "Salmón Panko (6 Unidades)", "precio": "$5.500", "descripcion": "" },
+                { "id": 2703, "nombre": "Salmón Panko (12 Unidades)", "precio": "$9.900", "descripcion": "" },
+                { "id": 2704, "nombre": "Ebi Temp. (3 Unidades)", "precio": "$2.900", "descripcion": "" },
+                { "id": 2705, "nombre": "Ebi Temp. (6 Unidades)", "precio": "$5.400", "descripcion": "" },
+                { "id": 2706, "nombre": "Ebi Temp. (12 Unidades)", "precio": "$9.800", "descripcion": "" },
+                { "id": 2707, "nombre": "Pollo Panko (3 Unidades)", "precio": "$2.800", "descripcion": "" },
+                { "id": 2708, "nombre": "Pollo Panko (6 Unidades)", "precio": "$4.900", "descripcion": "" },
+                { "id": 2709, "nombre": "Pollo Panko (12 Unidades)", "precio": "$9.000", "descripcion": "" },
+                { "id": 2710, "nombre": "Verduras Temp. (3 Unidades)", "precio": "$2.000", "descripcion": "" },
+                { "id": 2711, "nombre": "Verduras Temp. (6 Unidades)", "precio": "$3.600", "descripcion": "" },
+                { "id": 2712, "nombre": "Verduras Temp. (12 Unidades)", "precio": "$9.000", "descripcion": "" }
+              ]
+            },
+            {
+              "titulo": "Salsas y Extras",
+              "items": [
+                { "id": 2801, "nombre": "Envoltura Ciboulette", "precio": "$500", "descripcion": "" },
+                { "id": 2802, "nombre": "Palitos", "precio": "$150", "descripcion": "" },
+                { "id": 2803, "nombre": "Wasabi", "precio": "$400", "descripcion": "" },
+                { "id": 2804, "nombre": "Sriracha", "precio": "$500", "descripcion": "" },
+                { "id": 2805, "nombre": "Hoja de arroz", "precio": "$500", "descripcion": "" },
+                { "id": 2806, "nombre": "Ayuda Palitos", "precio": "$400", "descripcion": "" },
+                { "id": 2807, "nombre": "Jengibre", "precio": "$400", "descripcion": "" },
+                { "id": 2808, "nombre": "Salsa Unagui", "precio": "$900", "descripcion": "" },
+                { "id": 2809, "nombre": "Salsa Soya", "precio": "$500", "descripcion": "" }
+              ]
+            },
+            {
+              "titulo": "Bebidas",
+              "items": [
+                { "id": 2901, "nombre": "Coca-Cola Original 1.5L", "precio": "$3.000", "descripcion": "Bebida formato de 1.5 litros." },
+                { "id": 2902, "nombre": "Coca-Cola Zero 1.5L", "precio": "$3.000", "descripcion": "Bebida sin azúcar formato de 1.5 litros." }
+              ]
+            }
+          ]
+        };
+
+        // ==========================================
+        // 3. RENDERIZADO VISUAL DEL MENÚ
+        // ==========================================
+        const container = document.getElementById('menu-container');
+
+        menuData.categorias.forEach(cat => {
+            let catSection = document.createElement('section');
+            catSection.className = "bg-white p-6 md:p-8 rounded-xl shadow-xs border border-stone-200/60";
+
+            let html = `<h2 class="text-2xl font-bold uppercase tracking-wide text-stone-900 border-b-2 border-stone-900 pb-3 mb-6">${cat.titulo}</h2>`;
+
+            // FORMATO A: Subcategorías (Rolls con tablas estructuradas)
+            if (cat.esGrupo && cat.subcategorias) {
+                cat.subcategorias.forEach(sub => {
+                    html += `
+                        <div class="mb-10 last:mb-0">
+                            <h3 class="text-lg font-bold text-stone-800 uppercase tracking-wide mb-1">${sub.titulo}</h3>
+                            ${sub.alerta ? `<p class="text-xs text-stone-500 italic mb-4">💡 ${sub.alerta}</p>` : ''}
+                            
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm text-stone-600 border-collapse">
+                                    <thead>
+                                        <tr class="border-b border-stone-200 text-stone-400 text-xs uppercase tracking-wider">
+                                            <th class="py-2 font-semibold">Variedad</th>
+                                            <th class="py-2 font-semibold hidden md:table-cell">Ingredientes</th>
+                                            <th class="py-2 font-semibold text-right">Precio</th>
+                                            <th class="py-2 font-semibold text-right pl-4">Comanda</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-stone-100">
+                                        ${sub.items.map(item => `
+                                            <tr>
+                                                <td class="py-3 pr-2">
+                                                    <span class="font-bold text-stone-900 block">${item.nombre}</span>
+                                                    <span class="text-xs text-stone-500 md:hidden block mt-0.5">${item.descripcion}</span>
+                                                </td>
+                                                <td class="py-3 text-stone-600 hidden md:table-cell pr-4">${item.descripcion}</td>
+                                                <td class="py-3 font-bold text-stone-900 text-right whitespace-nowrap">${item.precio}</td>
+                                                <td class="py-3 text-right pl-4 whitespace-nowrap">
+                                                    <span class="bg-stone-100 text-stone-600 font-mono text-[11px] px-2 py-0.5 rounded border border-stone-200/60 mr-2">${item.alias}</span>
+                                                    <button onclick="procesarComanda(${item.id})" class="bg-stone-900 hover:bg-stone-800 text-white text-[11px] font-bold px-2.5 py-1 rounded transition uppercase tracking-wider cursor-pointer">
+                                                        Pedir
+                    </button>
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                });
+            } 
+            // FORMATO B: Tarjeta Lista (Tablas grandes y Super Promos con detalles)
+            else if (cat.tipo === "tarjeta-lista") {
+                if (cat.alerta) {
+                    html += `<div class="bg-red-50 text-red-700 text-xs font-bold px-4 py-2.5 rounded-lg mb-6 border border-red-100 uppercase tracking-wider">⚠️ ${cat.alerta}</div>`;
+                }
+                html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">`;
+                cat.items.forEach(item => {
+                    html += `
+                        <div class="border border-stone-100 bg-stone-50/50 p-5 rounded-xl flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-start gap-2 mb-3">
+                                    <h4 class="font-bold text-stone-900 uppercase text-base leading-tight">${item.nombre}</h4>
+                                    <span class="font-extrabold text-stone-900 text-base">${item.precio}</span>
+                                </div>
+                                <ul class="space-y-1 text-xs text-stone-600 list-disc list-inside mb-4">
+                                    ${item.detalles.map(det => `<li>${det}</li>`).join('')}
+                                </ul>
+                            </div>
+                            <button onclick="procesarComanda(${item.id})" class="w-full bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold py-2 rounded-lg transition uppercase tracking-wider mt-2 cursor-pointer">
+                                Pedir Combinación
+                            </button>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            } 
+            // FORMATO C: Simple (Gohan, Handrolls, Burgers, Sashimis, Extras, etc.)
+            else {
+                html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">`;
+                cat.items.forEach(item => {
+                    html += `
+                        <div class="flex justify-between items-center py-2 border-b border-stone-100 last:border-0 gap-4">
+                            <div class="space-y-0.5">
+                                <h4 class="font-bold text-stone-900 text-sm md:text-base">${item.nombre}</h4>
+                                ${item.descripcion ? `<p class="text-xs text-stone-500">${item.descripcion}</p>` : ''}
+                            </div>
+                            <div class="flex items-center gap-3 whitespace-nowrap">
+                                <span class="font-extrabold text-stone-900 text-sm md:text-base">${item.precio}</span>
+                                <button onclick="procesarComanda(${item.id})" class="bg-stone-900 hover:bg-stone-800 text-white text-[11px] font-bold px-2.5 py-1 rounded transition uppercase tracking-wider cursor-pointer">
+                                    Pedir
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+
+            catSection.innerHTML = html;
+            container.appendChild(catSection);
+        });
+    </script>
+</body>
+</html>

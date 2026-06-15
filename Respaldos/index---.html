@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PekaOS - Sistema integral para restaurantes</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+        body { background-color: #f4f6f9; display: flex; height: 100vh; overflow: hidden; flex-direction: column; }
+        
+        /* Barra Superior */
+        .navbar { background: #0B1F3A; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        /* ESTILOS NUEVOS PARA TU LOGO */
+        .navbar-logo { 
+            height: 35px;         /* Ajusta el alto perfecto para tu barra */
+            width: auto;          /* Mantiene la proporción original del ancho */
+            object-fit: contain;  /* Evita que se deforme o aplaste */
+            display: block;
+        }
+        
+        .nav-buttons { display: flex; gap: 10px; }
+        .btn-ajustes { background: #34495e; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        .btn-cocina { background: #e67e22; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        .btn-gestion { background: #27ae60; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        .btn-arqueo { background: #9b59b6; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        .btn-ajustes:hover { background: #4e6a85; }
+        .btn-cocina:hover { background: #d35400; }
+        .btn-gestion:hover { background: #219150; }
+        .btn-arqueo:hover { background: #8e44ad; }
+
+        /* Contenedor Principal */
+        .app-container { display: flex; flex: 1; overflow: hidden; width: 100%; }
+        .main-panel { flex: 2; padding: 20px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
+        .section-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        h3 { margin-bottom: 15px; color: #333; border-bottom: 2px solid #FF6B00; padding-bottom: 5px; width: fit-content; }
+        
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group.full { grid-column: span 2; }
+        .form-inline { display: flex; gap: 8px; align-items: flex-end; }
+        .form-inline input { flex: 1; }
+        
+        label { font-size: 12px; font-weight: bold; color: #666; }
+        input, select { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; width: 100%; }
+        
+        .btn-add-inline { background: #3498db; color: white; border: none; padding: 11px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px; }
+        .btn-add-inline:hover { background: #2980b9; }
+
+        /* Botón de último pedido */
+        .btn-ultimo-pedido { background: #8e44ad; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; margin-top: 4px; width: fit-content; transition: background 0.2s; }
+        .btn-ultimo-pedido:hover { background: #732d91; }
+
+        .grid-menu { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
+        .btn-producto { background: #fff; border: 2px solid #eee; padding: 20px; border-radius: 10px; cursor: pointer; text-align: center; transition: all 0.2s; font-weight: bold; }
+        .btn-producto:hover { border-color: #FF6B00; background: #fff5f5; transform: translateY(-2px); }
+        .btn-producto .precio { display: block; color: #FF6B00; font-size: 14px; margin-top: 5px; }
+
+        /* Contenedor Derecho: Comanda */
+        .sidebar-cart { flex: 1; background: white; border-left: 1px solid #e0e0e0; display: flex; flex-direction: column; box-shadow: -4px 0 10px rgba(0,0,0,0.02); }
+        .cart-header { padding: 20px; background: #FF6B00; color: white; font-weight: bold; font-size: 18px; }
+        .cart-items { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #eee; text-transform: uppercase; }
+        .item-controls button { background: #eee; border: none; width: 25px; height: 25px; cursor: pointer; font-weight: bold; border-radius: 4px; }
+        
+        .cart-summary { padding: 20px; background: #f9f9f9; border-top: 1px solid #eee; display: flex; flex-direction: column; gap: 8px; }
+        .summary-row { display: flex; justify-content: space-between; font-size: 14px; color: #555; }
+        .summary-row.discount { color: #e74c3c; font-weight: 500; }
+        .summary-row.total { font-size: 20px; font-weight: bold; color: #222; border-top: 2px dashed #ccc; padding-top: 10px; }
+        
+        .btn-submit { background: #2ecc71; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; transition: background 0.2s; }
+        .btn-submit:hover { background: #27ae60; }
+
+        /* Ventana Emergente Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 95%; max-width: 850px; display: flex; flex-direction: column; gap: 15px; max-height: 90vh; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .btn-close-modal { background: none; border: none; font-size: 24px; cursor: pointer; color: #999; }
+        
+        .tabs-ajustes { display: flex; gap: 10px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .tab-btn { padding: 10px 15px; border: none; background: #e0e0e0; cursor: pointer; font-weight: bold; border-radius: 6px; }
+        .tab-btn.active { background: #FF6B00; color: white; }
+        .tab-content { display: none; flex-direction: column; gap: 15px; overflow-y: auto; flex: 1; }
+        .tab-content.active { display: flex; }
+
+        .ajustes-section { border: 1px solid #eee; padding: 15px; border-radius: 8px; background: #fafafa; }
+
+        /* Estilos del Acordeón del Historial */
+        .accordion-dia { border: 1px solid #ddd; border-radius: 6px; margin-bottom: 8px; overflow: hidden; }
+        .accordion-header { background: #f8f9fa; padding: 12px 15px; font-weight: bold; font-size: 14px; color: #2c3e50; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; transition: background 0.2s; }
+        .accordion-header:hover { background: #f1f3f5; }
+        .accordion-body { display: none; padding: 10px; background: white; border-top: 1px solid #eee; overflow-x: auto; }
+
+        .historial-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; min-width: 600px; }
+        .historial-table th, .historial-table td { padding: 10px; border-bottom: 1px solid #eee; }
+        .historial-table th { background: #f4f6f9; color: #333; }
+        .btn-reimprimir { background: #3498db; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
+
+        #ticket-impresion { display: none; }
+
+        @media print {
+            body { background: white !important; color: black !important; display: block !important; height: auto !important; }
+            .navbar, .main-panel, .sidebar-cart, .modal { display: none !important; }
+            #ticket-impresion { display: block !important; width: 100% !important; max-width: 260px !important; font-family: 'Courier New', Courier, monospace !important; font-size: 13px !important; line-height: 1.4 !important; }
+            .ticket-header { text-align: center; margin-bottom: 10px; border-bottom: 1px dashed #000; padding-bottom: 5px; }
+            .ticket-items { margin-bottom: 10px; border-bottom: 1px dashed #000; padding-bottom: 5px; }
+            .ticket-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 3px; }
+            .ticket-footer { text-align: center; font-size: 12px; margin-top: 10px; font-weight: bold; }
+        }
+
+        .btn-logout {
+    background: transparent;
+    color: #ef4444; /* Color rojo sutil para indicar salida/alerta */
+    border: 1px solid #ef4444;
+    padding: 8px 16px;
+    font-size: 0.8em;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.btn-logout:hover {
+    background: #ef4444;
+    color: #000000; /* Invierte los colores al pasar el mouse */
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+}
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <img src="tu-logo.png" alt="PekaOS" class="navbar-logo">
+        
+        <div class="nav-buttons">
+            <button class="btn-cocina" onclick="abrirCocina()">🖥️ Ver Cocina</button>
+            <button class="btn-gestion" onclick="window.open('gestion_pedidos.html', '_blank', 'width=600,height=800')">✅ Gestión</button>
+            <button class="btn-arqueo" onclick="window.open('arqueo.html', '_blank', 'width=500,height=650')">💰 Arqueo</button>
+            <button class="btn-ajustes" onclick="abrirAjustes()">⚙️ Ajustes</button>
+            <button onclick="cerrarSesion()" class="btn-logout">Cerrar Sesión</button>
+        </div>
+    </div>
+ 
+    <div class="app-container">
+        <div class="main-panel">
+            <div class="section-card">
+                <h3>Datos del Pedido</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="text" id="tel" placeholder="Ej: 912345678" onkeyup="buscarCliente()">
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre del Cliente</label>
+                        <div class="form-inline">
+                            <input type="text" id="nombre" placeholder="Nombre completo">
+                            <button class="btn-add-inline" title="Guardar Cliente solo sin Pedido" onclick="guardarClienteSolo()">+</button>
+                        </div>
+                        <button type="button" id="btn-ultimo-pedido" class="btn-ultimo-pedido" style="display: none;" onclick="cargarUltimoPedido()">📋 Último Pedido</button>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Pedido</label>
+                        <select id="tipo_pedido" onchange="toggleDelivery()">
+                            <option value="DELIVERY">Delivery</option>
+                            <option value="RETIRO">Retiro en Local</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="grupo-tramo">
+                        <label>Zona de Envío</label>
+                        <select id="tramo_id" onchange="actualizarEnvio()"></select>
+                    </div>
+                    <div class="form-group full" id="grupo-dir">
+                        <label>Dirección de Entrega</label>
+                        <input type="text" id="direccion" placeholder="Calle, Número, Depto">
+                    </div>
+                    <div class="form-group full" id="grupo-ind">
+                        <label>Indicaciones de Entrega</label>
+                        <input type="text" id="indicaciones" placeholder="Ej: Casa portón negro, golpear fuerte">
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <h3>Menú y Promos</h3>
+                <div class="grid-menu" id="menu-productos"></div>
+            </div>
+        </div>
+
+        <div class="sidebar-cart">
+            <div class="cart-header">Comanda Actual</div>
+            <div class="cart-items" id="carrito-items"></div>
+            
+            <div class="cart-summary">
+                <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 5px;">
+                    <div class="form-group">
+                        <label>Método de Pago</label>
+                        <select id="metodo_pago">
+                            <option value="EFECTIVO">Efectivo</option>
+                            <option value="TRANSFERENCIA">Transferencia</option>
+                            <option value="DEBITO">Débito / Crédito</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>% Descuento</label>
+                        <select id="descuento_porcentaje" onchange="calcularTotales()">
+                            <option value="0">Sin Descuento (0%)</option>
+                            <option value="5">5% OFF</option>
+                            <option value="10">10% OFF</option>
+                            <option value="15">15% OFF</option>
+                            <option value="20">20% OFF</option>
+                            <option value="30">30% OFF</option>
+                            <option value="50">50% OFF</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="summary-row"><span>Subtotal:</span><span id="lbl-subtotal">$0</span></div>
+                <div class="summary-row"><span>Costo Envío:</span><span id="lbl-envio">$0</span></div>
+                <div class="summary-row discount" id="row-descuento" style="display:none;"><span>Descuento Aplicado:</span><span id="lbl-descuento">-$0</span></div>
+                <div class="summary-row total"><span>Total:</span><span id="lbl-total">$0</span></div>
+                <button class="btn-submit" onclick="enviarPedido()">Confirmar e Imprimir Comanda</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-ajustes">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚙️ Panel de Administración</h2>
+                <button class="btn-close-modal" onclick="cerrarAjustes()">×</button>
+            </div>
+            
+            <div class="tabs-ajustes">
+                <button class="tab-btn active" onclick="cambiarTab('tab-crear')">📦 Catálogos</button>
+                <button class="tab-btn" onclick="cambiarTab('tab-historial')">📜 Historial de Pedidos</button>
+            </div>
+            
+            <div id="tab-crear" class="tab-content active">
+                <div class="ajustes-section">
+                    <h3>📦 Agregar Nuevo Producto</h3>
+                    <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+                        <input type="text" id="ajuste-prod-nombre" placeholder="Nombre de la Hamburguesa/Bebida">
+                        <input type="number" id="ajuste-prod-precio" placeholder="Precio de Venta ($)">
+                        <input type="text" id="ajuste-prod-cat" placeholder="Categoría (Ej: Hamburguesas)" value="Hamburguesas">
+                        <button class="btn-submit" style="padding:10px;" onclick="crearProductoAjuste()">+ Crear Producto</button>
+                    </div>
+                </div>
+                <div class="ajustes-section">
+                    <h3>📍 Agregar Nueva Zona de Envío</h3>
+                    <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+                        <input type="text" id="ajuste-tramo-zona" placeholder="Nombre de la Zona (Ej: Quilpué)">
+                        <input type="number" id="ajuste-tramo-precio" placeholder="Costo de Envío ($)">
+                        <button class="btn-submit" style="padding:10px; background:#3498db;" onclick="crearTramoAjuste()">+ Crear Zona</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-historial" class="tab-content">
+                <div id="historial-agrupado-container" style="max-height: 60vh; overflow-y: auto; padding-right: 5px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="ticket-impresion"></div>
+
+    <script>
+// Seguridad: Si no hay sesión activa, lo expulsa de inmediato al login
+if (!document.cookie.includes('sesion_activa=true')) {
+    window.location.href = '/login.html';
+}
+
+        const API_URL = '/api';
+        let baseDatos = { productos: [], tramos: [] };
+        let carrito = [];
+        let costoEnvioActual = 0;
+
+        function abrirCocina() {
+            window.open('cocina.html', 'MiFudoCocina', 'width=1000,height=700,top=100,left=100');
+        }
+
+        async function inicializarApp() {
+            const res = await fetch(`${API_URL}/inicializar`);
+            baseDatos = await res.json();
+            const contenedorMenu = document.getElementById('menu-productos');
+            contenedorMenu.innerHTML = baseDatos.productos.map(p => `
+                <button class="btn-producto" onclick="agregarAlCarrito(${p.id})">
+                    ${p.nombre}
+                    <div class="precio">$${p.precio_venta}</div>
+                </button>
+            `).join('');
+            const selectTramo = document.getElementById('tramo_id');
+            selectTramo.innerHTML = baseDatos.tramos.map(t => `
+                <option value="${t.id}" data-precio="${t.precio_envio}">${t.zona} (+$${t.precio_envio})</option>
+            `).join('');
+            actualizarEnvio();
+        }
+
+        async function buscarCliente() {
+            const tel = document.getElementById('tel').value;
+            const btnUltimo = document.getElementById('btn-ultimo-pedido');
+            if(tel.length >= 8) {
+                const res = await fetch(`${API_URL}/clientes/${tel}`);
+                if(res.ok) {
+                    const cliente = await res.json();
+                    document.getElementById('nombre').value = cliente.nombre;
+                    document.getElementById('direccion').value = cliente.direccion;
+                    document.getElementById('indicaciones').value = cliente.indicaciones_entrega || '';
+                    document.getElementById('tramo_id').value = cliente.tramo_delivery_id;
+                    actualizarEnvio();
+                    if(btnUltimo) btnUltimo.style.display = 'inline-block';
+                } else {
+                    if(btnUltimo) btnUltimo.style.display = 'none';
+                }
+            } else {
+                if(btnUltimo) btnUltimo.style.display = 'none';
+            }
+        }
+
+        // Carga y clona los datos del último pedido en la comanda actual (sin importar la fecha)
+        async function cargarUltimoPedido() {
+            const tel = document.getElementById('tel').value;
+            if(!tel) return alert("⚠️ Ingrese un teléfono válido.");
+            
+            try {
+                // Llamamos al nuevo endpoint de Hono que busca en todo el historial
+                const res = await fetch(`${API_URL}/pedidos/ultimo/${tel}`);
+                
+                if(res.status === 404) {
+                    return alert("🔍 No se encontraron pedidos anteriores para este cliente en el sistema.");
+                }
+                if(!res.ok) return alert("Error al consultar el servidor.");
+                
+                const ultimo = await res.json();
+                
+                if(ultimo && ultimo.items) {
+                    // Clonamos los productos al carrito actual
+                    carrito = ultimo.items.map(i => ({
+                        producto_id: i.producto_id,
+                        nombre: i.nombre || 'Producto',
+                        precio_venta: i.precio_venta || i.precio_unitario,
+                        cantidad: i.cantidad
+                    }));
+                    
+                    // Restauramos los selectores e inputs correspondientes
+                    document.getElementById('tipo_pedido').value = ultimo.tipo_pedido;
+                    if (typeof toggleDelivery === "function") toggleDelivery();
+                    
+                    if(ultimo.tipo_pedido === 'DELIVERY' || ultimo.tipo_pedido === 'delivery') {
+                        document.getElementById('tramo_id').value = ultimo.tramo_delivery_id || '';
+                        document.getElementById('direccion').value = ultimo.direccion || '';
+                        document.getElementById('indicaciones').value = ultimo.indicaciones_entrega || '';
+                        if (typeof actualizarEnvio === "function") actualizarEnvio();
+                    }
+                    
+                    document.getElementById('metodo_pago').value = ultimo.metodo_pago || 'efectivo';
+                    document.getElementById('descuento_porcentaje').value = ultimo.descuento_porcentaje || '0';
+                    
+                    // Refrescamos la UI
+                    renderCarrito();
+                    
+                    // Formateamos fecha del aviso
+                    const fechaFormateada = new Date(ultimo.fecha).toLocaleDateString('es-CL', {
+                        day: '2-digit', month: '2-digit', year: 'numeric'
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Fallo al obtener el último pedido histórico.");
+            }
+        }
+
+        async function guardarClienteSolo() {
+            const telephone = document.getElementById('tel').value;
+            const nombre = document.getElementById('nombre').value;
+            const direccion = document.getElementById('direccion').value;
+            const indicaciones_entrega = document.getElementById('indicaciones').value;
+            const tramo_delivery_id = document.getElementById('tramo_id').value;
+            if(!telephone || !nombre) return alert("⚠️ Se necesita Teléfono y Nombre.");
+            const res = await fetch(`${API_URL}/clientes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ telephone, nombre, direccion, indicaciones_entrega, tramo_delivery_id })
+            });
+            if(res.ok) { alert("✨ ¡Cliente guardado con éxito!"); }
+        }
+
+        function abrirAjustes() { document.getElementById('modal-ajustes').style.display = 'flex'; cargarHistorialPedidos(); }
+        function cerrarAjustes() { document.getElementById('modal-ajustes').style.display = 'none'; }
+
+        function cambiarTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // Agrupa por día, enumera desde el 1 cada día y genera la interfaz tipo acordeón
+        async function cargarHistorialPedidos() {
+            const res = await fetch(`${API_URL}/pedidos`);
+            if(!res.ok) return;
+            const pedidos = await res.json();
+            const contenedor = document.getElementById('historial-agrupado-container');
+            
+            if(pedidos.length === 0) {
+                contenedor.innerHTML = `<div style="text-align:center; color:#666; padding:20px;">No hay pedidos registrados hoy.</div>`;
+                return;
+            }
+
+            // 1. Ordenar todos los pedidos de más antiguo a más reciente para enumerar correctamente
+            pedidos.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+            // 2. Agrupar en un objeto usando la fecha legible como clave
+            const grupos = {};
+            pedidos.forEach(p => {
+                const diaClave = new Date(p.fecha).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                if(!grupos[diaClave]) grupos[diaClave] = [];
+                grupos[diaClave].push(p);
+            });
+
+            // 3. Ordenar los días para que los días más nuevos aparezcan arriba en la pantalla de ajustes
+            const diasOrdenados = Object.keys(grupos).sort((a, b) => {
+                const [diaA, mesA, anioA] = a.split('/');
+                const [diaB, mesB, anioB] = b.split('/');
+                return new Date(anioB, mesB - 1, diaB) - new Date(anioA, mesA - 1, diaA);
+            });
+
+            // 4. Generar el código HTML de los acordeones
+            contenedor.innerHTML = diasOrdenados.map((dia, idxDia) => {
+                const pedidosDelDia = grupos[dia];
+                
+                // Crear las filas de la tabla correspondientes a este día
+                const filasTabla = pedidosDelDia.map((p, index) => {
+                    const hora = new Date(p.fecha).toLocaleString([], { hour: '2-digit', minute: '2-digit' });
+                    const numeroDiario = index + 1; // Resetea a 1 en cada ciclo diario
+                    const pedidoRaw = btoa(unescape(encodeURIComponent(JSON.stringify(p))));
+                    
+                    return `
+                        <tr>
+                            <td><strong>#${numeroDiario}</strong> <small style="color:#888;">(ID: ${p.id})</small></td>
+                            <td>${hora}</td>
+                            <td>${p.cliente_nombre || 'Cliente Ocasional'}</td>
+                            <td><span style="background:#eee; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:11px;">${p.tipo_pedido}</span></td>
+                            <td><small>${p.metodo_pago}</small></td>
+                            <td><strong>$${p.total_cobrado}</strong></td>
+                            <td><button class="btn-reimprimir" onclick="reimprimirTicketDesdeHistorial('${pedidoRaw}')">🖨️ Reimprimir</button></td>
+                        </tr>
+                    `;
+                }).join('');
+
+                // El primer acordeón (el día más reciente) se dejará expandido por comodidad por defecto
+                const displayInicial = idxDia === 0 ? 'block' : 'none';
+                const flechaInicial = idxDia === 0 ? '▼' : '►';
+
+                return `
+                    <div class="accordion-dia">
+                        <div class="accordion-header" onclick="toggleAcordeon(this, 'body-dia-${idxDia}')">
+                            <span>📅 ${dia} (${pedidosDelDia.length} pedidos)</span>
+                            <span class="icon-flecha">${flechaInicial}</span>
+                        </div>
+                        <div class="accordion-body" id="body-dia-${idxDia}" style="display: ${displayInicial};">
+                            <table class="historial-table">
+                                <thead>
+                                    <tr>
+                                        <th>N° Día</th>
+                                        <th>Hora</th>
+                                        <th>Cliente</th>
+                                        <th>Tipo</th>
+                                        <th>Pago</th>
+                                        <th>Total</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${filasTabla}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Función interactiva para contraer y desplegar los días
+        function toggleAcordeon(headerElement, bodyId) {
+            const body = document.getElementById(bodyId);
+            const flecha = headerElement.querySelector('.icon-flecha');
+            if(body.style.display === 'block') {
+                body.style.display = 'none';
+                flecha.innerText = '►';
+            } else {
+                body.style.display = 'block';
+                flecha.innerText = '▼';
+            }
+        }
+
+        function reimprimirTicketDesdeHistorial(encodedPedido) {
+            try {
+                const pedido = JSON.parse(decodeURIComponent(escape(atob(encodedPedido))));
+                const divTicket = document.getElementById('ticket-impresion');
+                const hora = new Date(pedido.fecha).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+                const itemsHtml = (pedido.items || []).map(c => `
+                    <div class="ticket-row" style="font-weight: bold; font-size: 1.2em; margin: 5px 0; text-transform: uppercase;">
+                        <span>[ ] ${c.cantidad}x ${c.nombre || 'Producto'}</span>
+                    </div>
+                `).join('');
+
+                divTicket.innerHTML = `
+                    <div class="ticket-header">
+                        <h2>*** COMANDA COCINA ***</h2>
+                        <h3>(REIMPRESIÓN COPIA)</h3>
+                        <div style="margin-top:5px;">Pedido N°: <strong>#${pedido.id}</strong></div>
+                        <div>Hora: ${hora} | Tipo: <strong>${pedido.tipo_pedido}</strong></div>
+                        ${pedido.cliente_nombre ? `<div>Cliente: ${pedido.cliente_nombre}</div>` : ''}
+                        ${pedido.tipo_pedido === 'DELIVERY' ? `<div>Dir: ${pedido.direccion || ''}</div>` : ''}
+                    </div>
+                    <div class="ticket-items">
+                        ${itemsHtml}
+                    </div>
+                    <div class="ticket-footer">
+                        <div>Monto Total Cobrado: $${pedido.total_cobrado}</div>
+                    </div>
+                `;
+                
+                setTimeout(() => { 
+                    window.print(); 
+                    setTimeout(() => { divTicket.innerHTML = ''; }, 300); 
+                }, 100);
+
+            } catch (err) {
+                console.error("Error al reimprimir:", err);
+                alert("No se pudo cargar el ticket.");
+            }
+        }
+        
+        function toggleDelivery() {
+            const tipo = document.getElementById('tipo_pedido').value;
+            const esRetiro = tipo === 'RETIRO';
+            document.getElementById('grupo-tramo').style.display = esRetiro ? 'none' : 'flex';
+            document.getElementById('grupo-dir').style.display = esRetiro ? 'none' : 'flex';
+            document.getElementById('grupo-ind').style.display = esRetiro ? 'none' : 'flex';
+            const opcionTramo = document.getElementById('tramo_id').selectedOptions[0];
+            costoEnvioActual = (esRetiro || !opcionTramo) ? 0 : parseFloat(opcionTramo.getAttribute('data-precio'));
+            calcularTotales();
+        }
+
+        function actualizarEnvio() {
+            const opcionTramo = document.getElementById('tramo_id').selectedOptions[0];
+            if(document.getElementById('tipo_pedido').value === 'DELIVERY' && opcionTramo) {
+                costoEnvioActual = parseFloat(opcionTramo.getAttribute('data-precio'));
+            } else {
+                costoEnvioActual = 0;
+            }
+            calcularTotales();
+        }
+
+        function agregarAlCarrito(id) {
+            const prod = baseDatos.productos.find(p => p.id === id);
+            const item = carrito.find(c => c.producto_id === id);
+            if(item) { item.cantidad++; } 
+            else { carrito.push({ producto_id: prod.id, nombre: prod.nombre, precio_venta: prod.precio_venta, cantidad: 1 }); }
+            renderCarrito();
+        }
+
+        function alterarCantidad(id, cambio) {
+            const item = carrito.find(c => c.producto_id === id);
+            if(item) {
+                item.cantidad += cambio;
+                if(item.cantidad <= 0) carrito = carrito.filter(c => c.producto_id !== id);
+            }
+            renderCarrito();
+        }
+
+        function renderCarrito() {
+            const contenedor = document.getElementById('carrito-items');
+            contenedor.innerHTML = carrito.map(c => `
+                <div class="item-row">
+                    <div>
+                        <strong style="font-weight: 800;">${c.nombre}</strong><br>
+                        <small>$${c.precio_venta} c/u</small>
+                    </div>
+                    <div class="item-controls">
+                        <button onclick="alterarCantidad(${c.producto_id}, -1)">-</button>
+                        <span style="margin: 0 5px;">${c.cantidad}</span>
+                        <button onclick="alterarCantidad(${c.producto_id}, 1)">+</button>
+                    </div>
+                </div>
+            `).join('');
+            calcularTotales();
+        }
+
+        function calcularTotales() {
+            const subtotal = carrito.reduce((acc, c) => acc + (c.precio_venta * c.cantidad), 0);
+            const totalPreDescuento = subtotal + costoEnvioActual;
+            const pctDescuento = parseFloat(document.getElementById('descuento_porcentaje').value);
+            const rebaja = Math.round(totalPreDescuento * (pctDescuento / 100));
+            const totalFinal = totalPreDescuento - rebaja;
+            document.getElementById('lbl-subtotal').innerText = `$${subtotal}`;
+            document.getElementById('lbl-envio').innerText = `$${costoEnvioActual}`;
+            const contenedorDescuento = document.getElementById('row-descuento');
+            if(pctDescuento > 0) {
+                document.getElementById('lbl-descuento').innerText = `-$${rebaja} (${pctDescuento}%)`;
+                contenedorDescuento.style.display = 'flex';
+            } else {
+                contenedorDescuento.style.display = 'none';
+            }
+            document.getElementById('lbl-total').innerText = `$${totalFinal}`;
+        }
+
+        async function enviarPedido() {
+            if (carrito.length === 0) return alert("Agrega al menos un producto.");
+            const subtotal = carrito.reduce((acc, c) => acc + (c.precio_venta * c.cantidad), 0);
+            const totalPreDescuento = subtotal + costoEnvioActual;
+            const pctDescuento = parseFloat(document.getElementById('descuento_porcentaje').value);
+            const rebaja = Math.round(totalPreDescuento * (pctDescuento / 100));
+            const totalFinal = totalPreDescuento - rebaja;
+
+            const payload = {
+                telefono: document.getElementById('tel').value,
+                nombre: document.getElementById('nombre').value,
+                tipo_pedido: document.getElementById('tipo_pedido').value,
+                tramo_delivery_id: document.getElementById('tramo_id').value || null,
+                direccion: document.getElementById('direccion').value,
+                indicaciones: document.getElementById('indicaciones').value,
+                metodo_pago: document.getElementById('metodo_pago').value,
+                costo_delivery: costoEnvioActual,
+                descuento_porcentaje: pctDescuento,
+                total_cobrado: totalFinal,
+                items: carrito
+            };
+
+            try {
+                const res = await fetch(`${API_URL}/pedidos`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const pedidoCodificado = btoa(unescape(encodeURIComponent(JSON.stringify(data.pedido))));
+                    reimprimirTicketDesdeHistorial(pedidoCodificado);
+                    carrito = [];
+                    renderCarrito();
+                    cerrarAjustes();
+                    // Limpiar el botón de último pedido de la vista actual
+                    document.getElementById('btn-ultimo-pedido').style.display = 'none';
+                } else {
+                    alert("❌ Error: " + data.error);
+                }
+            } catch (err) {
+                alert("Fallo de conexión con el servidor.");
+            }
+        }
+
+        async function crearProductoAjuste() {
+            const nombre = document.getElementById('ajuste-prod-nombre').value;
+            const precio_venta = parseFloat(document.getElementById('ajuste-prod-precio').value);
+            const categoria = document.getElementById('ajuste-prod-cat').value;
+            await fetch(`${API_URL}/productos`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre, precio_venta, categoria })
+            });
+            alert("¡Producto Creado!");
+            inicializarApp();
+        }
+
+        async function crearTramoAjuste() {
+            const zona = document.getElementById('ajuste-tramo-zona').value;
+            const precio_envio = parseFloat(document.getElementById('ajuste-tramo-precio').value);
+            await fetch(`${API_URL}/tramos`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ zona, precio_envio })
+            });
+            alert("¡Zona de Envío Creada!");
+            inicializarApp();
+        }
+
+        inicializarApp();
+
+function cerrarSesion() {
+    // Muestra la ventana emergente de confirmación
+    const seguro = confirm("¿Seguro que quiere cerrar sesión?");
+    
+    // Si el usuario hace clic en "Aceptar" (Sí)
+    if (seguro) {
+        // Borra la cookie cambiando su fecha de expiración al pasado
+        document.cookie = "sesion_activa=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        
+        // Lo manda de vuelta al login
+        window.location.href = '/login.html';
+    }
+    // Si hace clic en "Cancelar" (No), la función se corta aquí y no pasa nada
+}
+    </script>
+</body>
+</html>

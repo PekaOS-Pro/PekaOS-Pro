@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PekaOS - Sistema integral para restaurantes</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+        body { background-color: #f4f6f9; display: flex; height: 100vh; overflow: hidden; flex-direction: column; }
+        
+        /* Barra Superior */
+        .navbar { background: #0B1F3A; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        .navbar-logo { 
+            height: 35px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+        }
+        
+        .nav-buttons { display: flex; gap: 10px; }
+        .btn-ajustes { background: #34495e; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        .btn-cocina { background: #e67e22; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        .btn-gestion { background: #27ae60; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        .btn-arqueo { background: #9b59b6; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        .btn-ajustes:hover { background: #4e6a85; }
+        .btn-cocina:hover { background: #d35400; }
+        .btn-gestion:hover { background: #219150; }
+        .btn-arqueo:hover { background: #8e44ad; }
+
+        /* Contenedor Principal */
+        .app-container { display: flex; flex: 1; overflow: hidden; width: 100%; }
+        .main-panel { flex: 2; padding: 20px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
+        .section-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        h3 { margin-bottom: 15px; color: #333; border-bottom: 2px solid #FF6B00; padding-bottom: 5px; width: fit-content; }
+        
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group.full { grid-column: span 2; }
+        .form-inline { display: flex; gap: 8px; align-items: flex-end; }
+        .form-inline input { flex: 1; }
+        
+        label { font-size: 12px; font-weight: bold; color: #666; }
+        input, select { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; width: 100%; }
+        
+        .btn-add-inline { background: #3498db; color: white; border: none; padding: 11px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px; }
+        .btn-add-inline:hover { background: #2980b9; }
+
+        .btn-ultimo-pedido { background: #8e44ad; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; margin-top: 4px; width: fit-content; transition: background 0.2s; }
+        .btn-ultimo-pedido:hover { background: #732d91; }
+
+/* Contenedor general: Ordena las categorías como bloques en una cuadrícula */
+#menu-accordion-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
+    gap: 12px;
+    align-items: start;
+}
+
+/* Bloque contenedor de la categoría */
+.accordion-menu-cat { 
+    border: 1px solid #e2e8f0; 
+    border-radius: 12px; 
+    overflow: hidden; 
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    transition: all 0.2s ease;
+}
+
+/* Cuando una categoría se expande, toma todo el ancho de la fila */
+.accordion-menu-cat.expandida {
+    grid-column: 1 / -1; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* Encabezado de la categoría transformado en un botón cuadrado compacto */
+.accordion-menu-header { 
+    background: #f8fafc; 
+    padding: 15px 10px; 
+    font-weight: bold; 
+    font-size: 13px; 
+    color: #1e293b; 
+    cursor: pointer; 
+    display: flex; 
+    flex-direction: column; /* Alinea el texto y la flecha hacia abajo */
+    justify-content: center; 
+    align-items: center; 
+    gap: 6px;
+    text-align: center;
+    min-height: 80px; /* Proporción cuadrada inicial */
+    user-select: none; 
+    transition: background 0.2s, color 0.2s;
+}
+
+/* Cambia de aspecto a una fila limpia cuando la categoría se abre */
+.accordion-menu-cat.expandida .accordion-menu-header {
+    flex-direction: row; 
+    justify-content: space-between;
+    min-height: auto;
+    padding: 10px 14px;
+    background: #f1f5f9;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.accordion-menu-header:hover { 
+    background: #f1f5f9; 
+    color: #FF6B00;
+}
+
+/* Cuerpo donde están las tarjetas cuadradas */
+.accordion-menu-body { 
+    padding: 12px; 
+    background: #fff; 
+    display: none; 
+}
+.accordion-menu-body.active { 
+    display: block; 
+}
+
+/* Cuadrícula interna de productos (Cuadrados perfectos) */
+.grid-menu { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(110px, 110px)); 
+    gap: 12px; 
+    justify-content: start; 
+}
+
+.btn-producto { 
+    background: #fff; 
+    border: 2px solid #eee; 
+    padding: 10px 8px; 
+    border-radius: 10px; 
+    cursor: pointer; 
+    text-align: center; 
+    transition: all 0.2s; 
+    font-weight: bold; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: space-between; 
+    
+    /* ESTILOS PARA HACERLA CUADRADA */
+    width: 110px;
+    height: 110px; /* Igualamos ancho y alto */
+    box-sizing: border-box;
+    overflow: hidden; /* Evita que textos gigantes rompan el cuadrado */
+}
+
+.btn-producto:hover { border-color: #FF6B00; background: #fff5f5; transform: translateY(-2px); }
+
+/* Ajuste de fuentes internas para que quepan bien en el espacio cuadrado */
+.btn-producto .alias-txt { 
+    font-size: 9px; 
+    display: block; 
+    color: #777; 
+    font-weight: normal; 
+    text-align: center; 
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.btn-producto .nombre-txt { 
+    text-align: center; 
+    flex: 1; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-size: 11px; 
+    line-height: 1.2;
+    margin: 2px 0;
+    word-break: break-word;
+}
+
+.btn-producto .precio { 
+    display: block; 
+    color: #FF6B00; 
+    font-size: 12px; 
+    margin-top: auto; 
+}
+
+        /* Contenedor Derecho: Comanda */
+        .sidebar-cart { flex: 1; background: white; border-left: 1px solid #e0e0e0; display: flex; flex-direction: column; box-shadow: -4px 0 10px rgba(0,0,0,0.02); }
+        .cart-header { padding: 20px; background: #FF6B00; color: white; font-weight: bold; font-size: 18px; }
+        .cart-items { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #eee; text-transform: uppercase; }
+        .item-controls button { background: #eee; border: none; width: 25px; height: 25px; cursor: pointer; font-weight: bold; border-radius: 4px; }
+        
+        .cart-summary { padding: 20px; background: #f9f9f9; border-top: 1px solid #eee; display: flex; flex-direction: column; gap: 8px; }
+        .summary-row { display: flex; justify-content: space-between; font-size: 14px; color: #555; }
+        .summary-row.discount { color: #e74c3c; font-weight: 500; }
+        .summary-row.total { font-size: 20px; font-weight: bold; color: #222; border-top: 2px dashed #ccc; padding-top: 10px; }
+        
+        .btn-submit { background: #2ecc71; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; transition: background 0.2s; }
+        .btn-submit:hover { background: #27ae60; }
+
+        /* Ventana Emergente Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 95%; max-width: 850px; display: flex; flex-direction: column; gap: 15px; max-height: 90vh; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .btn-close-modal { background: none; border: none; font-size: 24px; cursor: pointer; color: #999; }
+        
+        .tabs-ajustes { display: flex; gap: 10px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .tab-btn { padding: 10px 15px; border: none; background: #e0e0e0; cursor: pointer; font-weight: bold; border-radius: 6px; }
+        .tab-btn.active { background: #FF6B00; color: white; }
+        .tab-content { display: none; flex-direction: column; gap: 15px; overflow-y: auto; flex: 1; }
+        .tab-content.active { display: flex; }
+
+        .ajustes-section { border: 1px solid #eee; padding: 15px; border-radius: 8px; background: #fafafa; }
+
+        /* Historial */
+        .accordion-dia { border: 1px solid #ddd; border-radius: 6px; margin-bottom: 8px; overflow: hidden; }
+        .accordion-header { background: #f8f9fa; padding: 12px 15px; font-weight: bold; font-size: 14px; color: #2c3e50; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; transition: background 0.2s; }
+        .accordion-header:hover { background: #f1f3f5; }
+        .accordion-body { display: none; padding: 10px; background: white; border-top: 1px solid #eee; overflow-x: auto; }
+
+        .historial-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; min-width: 600px; }
+        .historial-table th, .historial-table td { padding: 10px; border-bottom: 1px solid #eee; }
+        .historial-table th { background: #f4f6f9; color: #333; }
+        .btn-reimprimir { background: #3498db; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
+
+        #ticket-impresion { display: none; }
+
+        @media print {
+            body { background: white !important; color: black !important; display: block !important; height: auto !important; }
+            .navbar, .main-panel, .sidebar-cart, .modal { display: none !important; }
+            #ticket-impresion { display: block !important; width: 100% !important; max-width: 260px !important; font-family: 'Courier New', Courier, monospace !important; font-size: 13px !important; line-height: 1.4 !important; }
+            .ticket-header { text-align: center; margin-bottom: 10px; border-bottom: 1px dashed #000; padding-bottom: 5px; }
+            .ticket-items { margin-bottom: 10px; border-bottom: 1px dashed #000; padding-bottom: 5px; }
+            .ticket-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 3px; }
+            .ticket-footer { text-align: center; font-size: 12px; margin-top: 10px; font-weight: bold; }
+        }
+
+
+
+        .btn-logout {
+            background: transparent;
+            color: #ef4444; 
+            border: 1px solid #ef4444;
+            padding: 8px 16px;
+            font-size: 0.8em;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        .btn-logout:hover {
+            background: #ef4444;
+            color: #000000; 
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <img src="tu-logo.png" alt="PekaOS" class="navbar-logo">
+        
+        <div class="nav-buttons">
+            <button class="btn-cocina" onclick="abrirCocina()">🖥️ Ver Cocina</button>
+            <button class="btn-gestion" onclick="window.open('gestion_pedidos.html', '_blank', 'width=600,height=800')">✅ Gestión</button>
+            <button class="btn-arqueo" onclick="window.open('arqueo.html', '_blank', 'width=500,height=650')">💰 Arqueo</button>
+            <button class="btn-ajustes" onclick="abrirAjustes()">⚙️ Ajustes</button>
+            <button onclick="cerrarSesion()" class="btn-logout">Cerrar Sesión</button>
+        </div>
+    </div>
+ 
+    <div class="app-container">
+        <div class="main-panel">
+            <div class="section-card">
+                <h3>Datos del Pedido</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="text" id="tel" placeholder="Ej: 912345678" onkeyup="buscarCliente()">
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre del Cliente</label>
+                        <div class="form-inline">
+                            <input type="text" id="nombre" placeholder="Nombre completo">
+                            <button class="btn-add-inline" title="Guardar Cliente" onclick="guardarClienteSolo()">+</button>
+                        </div>
+                        <button type="button" id="btn-ultimo-pedido" class="btn-ultimo-pedido" style="display: none;" onclick="cargarUltimoPedido()">📋 Último Pedido</button>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Pedido</label>
+                        <select id="tipo_pedido" onchange="toggleDelivery()">
+                            <option value="DELIVERY">Delivery</option>
+                            <option value="RETIRO">Retiro en Local</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="grupo-tramo">
+                        <label>Zona de Envío</label>
+                        <select id="tramo_id" onchange="actualizarEnvio()"></select>
+                    </div>
+                    <div class="form-group full" id="grupo-dir">
+                        <label>Dirección de Entrega</label>
+                        <input type="text" id="direccion" placeholder="Calle, Número, Depto">
+                    </div>
+                    <div class="form-group full" id="grupo-ind">
+                        <label>Indicaciones de Entrega</label>
+                        <input type="text" id="indicaciones" placeholder="Ej: Casa portón negro">
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #FF6B00; padding-bottom: 5px;">
+                    <h3 style="border-bottom: none; margin-bottom: 0;">Menú y Promos</h3>
+                    <div style="width: 250px;">
+                        <input type="text" id="buscador-menu" placeholder="🔍 Buscar producto o alias..." onkeyup="filtrarMenuYProductos()">
+                    </div>
+                </div>
+                <div id="menu-accordion-container"></div>
+            </div>
+        </div>
+
+        <div class="sidebar-cart">
+            <div class="cart-header">Comanda Actual</div>
+            <div class="cart-items" id="carrito-items"></div>
+            
+            <div class="cart-summary">
+                <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 5px;">
+                    <div class="form-group">
+                        <label>Método de Pago</label>
+                        <select id="metodo_pago">
+                            <option value="EFECTIVO">Efectivo</option>
+                            <option value="TRANSFERENCIA">Transferencia</option>
+                            <option value="DEBITO">Débito / Crédito</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>% Descuento</label>
+                        <select id="descuento_porcentaje" onchange="calcularTotales()">
+                            <option value="0">Sin Descuento (0%)</option>
+                            <option value="5">5% OFF</option>
+                            <option value="10">10% OFF</option>
+                            <option value="15">15% OFF</option>
+                            <option value="20">20% OFF</option>
+                            <option value="30">30% OFF</option>
+                            <option value="50">50% OFF</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="summary-row"><span>Subtotal:</span><span id="lbl-subtotal">$0</span></div>
+                <div class="summary-row"><span>Costo Envío:</span><span id="lbl-envio">$0</span></div>
+                <div class="summary-row discount" id="row-descuento" style="display:none;"><span>Descuento Aplicado:</span><span id="lbl-descuento">-$0</span></div>
+                <div class="summary-row total"><span>Total:</span><span id="lbl-total">$0</span></div>
+                <button class="btn-submit" onclick="enviarPedido()">Confirmar e Imprimir Comanda</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-ajustes">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚙️ Panel de Administración</h2>
+                <button class="btn-close-modal" onclick="cerrarAjustes()">×</button>
+            </div>
+            
+            <div class="tabs-ajustes">
+                <button class="tab-btn active" onclick="cambiarTab('tab-crear')">📦 Catálogos</button>
+                <button class="tab-btn" onclick="cambiarTab('tab-historial')">📜 Historial de Pedidos</button>
+            </div>
+            
+            <div id="tab-crear" class="tab-content active">
+                <div class="ajustes-section">
+                    <h3>📦 Agregar Nuevo Producto</h3>
+                    <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+                        <input type="text" id="ajuste-prod-nombre" placeholder="Nombre de la Hamburguesa/Bebida">
+                        <input type="number" id="ajuste-prod-precio" placeholder="Precio de Venta ($)">
+                        <input type="text" id="ajuste-prod-cat" placeholder="Categoría (Ej: Hamburguesas)" value="Hamburguesas">
+                        <button class="btn-submit" style="padding:10px;" onclick="crearProductoAjuste()">+ Crear Producto</button>
+                    </div>
+                </div>
+                <div class="ajustes-section">
+                    <h3>📍 Agregar Nueva Zona de Envío</h3>
+                    <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+                        <input type="text" id="ajuste-tramo-zona" placeholder="Nombre de la Zona (Ej: Quilpué)">
+                        <input type="number" id="ajuste-tramo-precio" placeholder="Costo de Envío ($)">
+                        <button class="btn-submit" style="padding:10px; background:#3498db;" onclick="crearTramoAjuste()">+ Crear Zona</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-historial" class="tab-content">
+                <div id="historial-agrupado-container" style="max-height: 60vh; overflow-y: auto; padding-right: 5px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="ticket-impresion"></div>
+
+    <script>
+        // No redirigir automáticamente a /login.html al cargar la página.
+        // Esto impedía ver la app al entrar desde el enlace (Cloudflare/preview).
+        // Si se requiere, restaurar la redirección o implementar una comprobación
+        // que muestre un modal de login en lugar de forzar la navegación.
+        /*
+        if (!document.cookie.includes('sesion_activa=true')) {
+            window.location.href = '/login.html';
+        }
+        */
+
+        const API_URL = '/api';
+        let baseDatos = { productos: [], tramos: [] };
+        let carrito = [];
+        let costoEnvioActual = 0;
+
+        const menuDataEstructurado = {
+            categorias: [
+                {
+                    titulo: "Tablas",
+                    alerta: "",
+                    tipo: "tarjeta-lista",
+                    items: [
+                        { id: 1001, nombre: "FULL CHICKEN (40 Piezas)", precio_venta: 20990, descripcion: "Pollo - Queso Cream - Cebollín (Env. Palta) (9 Cortes), Pollo - Palta (Envuelto en Sésamo) (9 Cortes), Pollo - Queso Cream - Cebollín (Panko) (10 Cortes), Pollo Panko (8 Unidades), Niguiri Crispy (4 Unidades)", alias: "TABLA FULL CHICKEN" },
+                        { id: 1002, nombre: "TABLA 2 (38 Piezas)", precio_venta: 18990, descripcion: "Avo Sake (8 Cortes), Maki Kani (8 Cortes), Hoso Ebi (6 Cortes), Chicken Panko (8 Cortes), Pollo Panko (4 Unidades), Salmon Panko (4 Unidades)", alias: "TABLA 2" },
+                        { id: 1003, nombre: "TABLA 3 (72 Piezas)", precio_venta: 30990, descripcion: "Avo Sake (8 Cortes), Maki Kani (8 Cortes), Cream Chicken (8 Cortes), Futo Sake (10 Cortes), Hoso Ebi (6 Cortes), Chicken Panko (8 Cortes), Vegetal Panko (8 Cortes), Pollo Panko (8 Unidades), Salmon Panko (8 Unidades)", alias: "TABLA 3" },
+                        { id: 1004, nombre: "TABLA LIKE (50 Piezas)", precio_venta: 21990, descripcion: "California Kani (9 Cortes), Avo Chicken (9 Cortes), Hoso Chicken Panko (10 Cortes), Cream Vegetal (9 Cortes), Vegetal Panko (9 Cortes), Pollo Panko (4 Unidades)", alias: "TABLA LIKE" },
+                        { id: 1005, nombre: "TABLA HOT (34 Piezas)", precio_venta: 19990, descripcion: "Ebi Panko (8 Cortes), Vegetal Panko (8 Cortes), Hoso Chicken Panko (10 Cortes), Pollo Panko (8 Unidades)", alias: "TABLA HOT" },
+                        { id: 1006, nombre: "TABLA VEGAN (32 Piezas)", precio_venta: 16990, descripcion: "California Vegetal (8 Cortes), Vegan Panko (8 Cortes), Avo Fresh (8 Cortes), Ura Vegan (envueltos en amapola) (8 Unidades)", alias: "TABLA VEGAN" }
+                    ]
+                },
+                {
+                    titulo: "Super Promos",
+                    tipo: "tarjeta-lista",
+                    items: [
+                        { id: 1101, nombre: "SUPER 1 (30 piezas)", precio_venta: 14990, descripcion: "1 Pollo Teriyaki - Queso Cream - Cebollín (Env. Palta), 1 Kanikama - Palta - Pimentón (Env. Sésamo), 1 Camarón - Queso Cream - Palta (Panko), Incluye: 1 Soya - 1 Unagui - 2 Palitos", alias: "SUPER 1" },
+                        { id: 1102, nombre: "SUPER 2 (50 piezas)", precio_venta: 19990, descripcion: "1 Pollo Teriyaki - Queso Cream - Cebollín (Env. Palta), 1 Kanikama - Palta - Pimentón (Env. Sésamo), 1 Pollo Teriyaki - Queso Cream - Cebollín (Env. Amapola), 1 Camarón - Queso Cream - Palta (Panko), 1 Palta - Palmito - Pimentón (Panko), Incluye: 2 Soya - 1 Unagui - 3 Palitos", alias: "SUPER 2" },
+                        { id: 1103, nombre: "SUPER 3 (70 piezas)", precio_venta: 27990, descripcion: "1 Pollo Teriyaki - Queso Cream - Cebollín (Env. Palta), 1 Kanikama - Palta - Pimentón (Env. Sésamo), 1 Pollo Teriyaki - Queso Cream - Cebollín (Env. Amapola), 1 Palmito - Espárrago - Cebollín (Env. Queso Cream), 1 Camarón - Queso Cream - Palta (Panko), 1 Palta - Palmito - Pimentón (Panko), 1 Pollo Teriyaki - Queso Cream - Cebollín (Panko), Incluye: 3 Soya - 2 Unagui - 4 Palitos", alias: "SUPER 3" }
+                    ]
+                },
+                {
+                    titulo: "Tempuras / Panko",
+                    items: [
+                        { id: 1201, nombre: "KANI PANKO", precio_venta: 5300, descripcion: "Kanikama - Queso Cream - Pimentón", alias: "TP1" },
+                        { id: 1202, nombre: "CHICKEN PANKO", precio_venta: 5800, descripcion: "Pollo Teriyaki - Queso Cream - Cebollín", alias: "TP2" },
+                        { id: 1203, nombre: "SAKE PANKO", precio_venta: 6300, descripcion: "Salmón - Queso Cream - Ciboulette", alias: "TP3" },
+                        { id: 1204, nombre: "EBI PANKO", precio_venta: 5900, descripcion: "Camarón - Queso Cream - Cebollín", alias: "TP4" },
+                        { id: 1205, nombre: "TAKO PANKO", precio_venta: 6500, descripcion: "Pulpo - Queso Cream - Ciboulette", alias: "TP5" },
+                        { id: 1206, nombre: "VEGETAL PANKO", precio_venta: 5400, descripcion: "Espárrago - Pimentón - Palta", alias: "TP6" },
+                        { id: 1207, nombre: "SMOKE PANKO", precio_venta: 5900, descripcion: "Salmón Ahumado - Queso Cream - Cebollín", alias: "TP7" },
+                        { id: 1208, nombre: "MIX PANKO", precio_venta: 6500, descripcion: "Camarón - Salmón - Queso Cream - Cebollín", alias: "TP8" },
+                        { id: 1209, nombre: "VEGAN PANKO", precio_venta: 5500, descripcion: "Palta - Tomate Cherry - Choclo Baby", alias: "TP9" },
+                        { id: 1210, nombre: "CHICKEN NUSS PANKO", precio_venta: 6100, descripcion: "Pollo Teriyaki - Queso Cream - Nueces / Almendras", alias: "TP10" },
+                        { id: 1211, nombre: "EBI PANKO 2.0", precio_venta: 6300, descripcion: "Camarón - Queso Cream - Palta", alias: "TP11" },
+                        { id: 1212, nombre: "SEA BOMB", precio_venta: 7400, descripcion: "Camarón - Salmón - Pulpo - Queso Cream - Ciboulette", alias: "TP12" },
+                        { id: 1213, nombre: "CHICKEN PANKO 2.0", precio_venta: 6200, descripcion: "Pollo Teriyaki - Queso Cream - Palta", alias: "TP13" },
+                        { id: 1214, nombre: "MAGURO PANKO", precio_venta: 6400, descripcion: "Atún - Queso Cream - Cebollín", alias: "TP14" },
+                        { id: 1215, nombre: "PANKO ACEVICHADO", precio_venta: 9500, descripcion: "Queso Cream - Palta", alias: "TP15" }
+                    ]
+                },
+                {
+                    titulo: "Avocado Rolls",
+                    items: [
+                        { id: 1301, nombre: "AVO KANI", precio_venta: 5400, descripcion: "Kanikama - Queso Cream - Cebollín", alias: "AVO1" },
+                        { id: 1302, nombre: "AVO CHICKEN", precio_venta: 6200, descripcion: "Pollo Teriyaki - Queso Cream - Cebollín", alias: "AVO2" },
+                        { id: 1303, nombre: "AVO SAKE", precio_venta: 6500, descripcion: "Salmón - Queso Cream - Ciboulette", alias: "AVO3" },
+                        { id: 1304, nombre: "AVO EBI", precio_venta: 6400, descripcion: "Camarón - Queso Cream - Cebollín", alias: "AVO4" },
+                        { id: 1305, nombre: "TAKO ROLL", precio_venta: 6600, descripcion: "Pulpo - Queso Cream - Cebollín", alias: "AVO5" },
+                        { id: 1306, nombre: "AVO FRESH", precio_venta: 5200, descripcion: "Palmito - Espárrago - Cebollín", alias: "AVO6" },
+                        { id: 1307, nombre: "TERI PANKO", precio_venta: 6500, descripcion: "Pollo Panko - Queso Cream - Cebollín", alias: "AVO7" },
+                        { id: 1308, nombre: "AVO SAKE PANKO", precio_venta: 6900, descripcion: "Salmón Panko - Queso Cream - Cebollín", alias: "AVO8" },
+                        { id: 1309, nombre: "AVO EBI TEMPURA", precio_venta: 6700, descripcion: "Camarón Tempura - Queso Cream - Ciboulette", alias: "AVO9" },
+                        { id: 1310, nombre: "AVO SMOKE ROLL", precio_venta: 6200, descripcion: "Salmón Ahumado - Queso Cream - Cebollín", alias: "AVO10" },
+                        { id: 1311, nombre: "AVO MIX", precio_venta: 7200, descripcion: "Salmón - Camarón - Queso Cream - Cebollín", alias: "AVO11" },
+                        { id: 1312, nombre: "AVO TROPICAL", precio_venta: 6600, descripcion: "Salmón - Mango", alias: "AVO12" },
+                        { id: 1313, nombre: "EBI LIKE", precio_venta: 6200, descripcion: "Camarón - Queso Cream - Masago", alias: "AVO13" },
+                        { id: 1314, nombre: "AVO TONNO", precio_venta: 6400, descripcion: "Atún - Queso Cream - Cebollín", alias: "AVO14" },
+                        { id: 1315, nombre: "AVO LIKE ROLL", precio_venta: 6300, descripcion: "Salmón - Palmito - Espárrago", alias: "AVO15" },
+                        { id: 1316, nombre: "AVO VEGETAL PANKO", precio_venta: 5400, descripcion: "Cebollín Panko - Queso Cream - Pimentón", alias: "AVO16" },
+                        { id: 1317, nombre: "AVO ACEVICHADO", precio_venta: 9100, descripcion: "Queso Cream - Espárrago - Palmito", alias: "AVO17" }
+                    ]
+                },
+                {
+                    titulo: "Uramaki Rolls",
+                    items: [
+                        { id: 1401, nombre: "CALIFORNIA KANI", precio_venta: 4400, descripcion: "Kanikama - Palta", alias: "URA1" },
+                        { id: 1402, nombre: "CALIFORNIA CHICKEN", precio_venta: 4800, descripcion: "Pollo Teriyaki - Palta", alias: "URA2" },
+                        { id: 1403, nombre: "CALIFORNIA SAKE", precio_venta: 5300, descripcion: "Salmón - Palta", alias: "URA3" },
+                        { id: 1404, nombre: "CALIFORNIA EBI", precio_venta: 4900, descripcion: "Camarón - Palta", alias: "URA4" },
+                        { id: 1405, nombre: "CALIFORNIA VEGETAL", precio_venta: 4700, descripcion: "Palmito - Palta - Ciboulette - Espárrago", alias: "URA5" },
+                        { id: 1406, nombre: "MAKI EBI TEMPURA", precio_venta: 5900, descripcion: "Camarón Tempura - Queso Cream - Ciboulette", alias: "URA6" },
+                        { id: 1407, nombre: "MAKI YAKI PANKO", precio_venta: 5500, descripcion: "Pollo Panko - Queso Cream - Cebollín", alias: "URA7" },
+                        { id: 1408, nombre: "MAKI SAKE PANKO", precio_venta: 5900, descripcion: "Salmón Panko - Queso Cream - Cebollín", alias: "URA8" },
+                        { id: 1409, nombre: "SMOKE MAKI", precio_venta: 5200, descripcion: "Salmón Ahumado - Queso Cream - Cebollín", alias: "URA9" },
+                        { id: 1410, nombre: "MAKI KANI", precio_venta: 4700, descripcion: "Kanikama - Queso Cream - Palta", alias: "URA10" },
+                        { id: 1411, nombre: "MAKI YAKI", precio_venta: 5300, descripcion: "Pollo Teriyaki - Queso Cream - Palta", alias: "URA11" },
+                        { id: 1412, nombre: "SAKE MAKI", precio_venta: 5700, descripcion: "Salmón - Queso Cream - Palta", alias: "URA12" },
+                        { id: 1413, nombre: "EBI MAKI", precio_venta: 5400, descripcion: "Camarón - Queso Cream - Palta - Ciboulette", alias: "URA13" },
+                        { id: 1414, nombre: "TAKO MAKI ROLL", precio_venta: 5900, descripcion: "Pulpo - Palta - Ciboulette", alias: "URA14" },
+                        { id: 1415, nombre: "EBI SPICY", precio_venta: 5000, descripcion: "Camarón - Palta - Ciboulette - Sriracha", alias: "URA15" },
+                        { id: 1416, nombre: "MAGURO MAKI", precio_venta: 5500, descripcion: "Atún - Palta - Ciboulette", alias: "URA16" },
+                        { id: 1417, nombre: "URA VEGAN", precio_venta: 4400, descripcion: "Palta - Pepino - Cebollín", alias: "URA17" },
+                        { id: 1418, nombre: "URA ACEVICHADO", precio_venta: 8500, descripcion: "Queso Cream - Palmito - Palta", alias: "URA18" }
+                    ]
+                },
+                {
+                    titulo: "Cream Rolls",
+                    items: [
+                        { id: 1501, nombre: "CREAM KANI", precio_venta: 5000, descripcion: "Kanikama - Palta", alias: "CREAM1" },
+                        { id: 1502, nombre: "CREAM CHICKEN", precio_venta: 5600, descripcion: "Pollo Teriyaki - Palta - Cebollín", alias: "CREAM2" },
+                        { id: 1503, nombre: "CREAM SAKE", precio_venta: 6200, descripcion: "Salmón - Palta - Ciboulette", alias: "CREAM3" },
+                        { id: 1504, fontName: "CREAM EBI", nombre: "CREAM EBI", precio_venta: 5800, descripcion: "Camarón - Ciboulette - Palta", alias: "CREAM4" },
+                        { id: 1505, nombre: "TAKO SNOW", precio_venta: 6300, descripcion: "Pulpo - Palta - Pimentón", alias: "CREAM5" },
+                        { id: 1506, nombre: "SNOW EBI PANKO", precio_venta: 6300, descripcion: "Camarón Panko - Palta - Cebollín", alias: "CREAM6" },
+                        { id: 1507, nombre: "SNOW SAKE TEMPURA", precio_venta: 6400, descripcion: "Salmón Tempura - Espárrago - Pimentón", alias: "CREAM7" },
+                        { id: 1508, nombre: "SNOW YAKI PANKO", precio_venta: 6100, descripcion: "Pollo Panko - Palta - Cebollín", alias: "CREAM8" },
+                        { id: 1509, nombre: "SNOW TROPICAL", precio_venta: 6400, descripcion: "Camarón Panko - Mango", alias: "CREAM9" },
+                        { id: 1510, nombre: "CREAM CHILI", precio_venta: 6000, descripcion: "Salmón - Coco/Merken - Pimentón - Cebollín", alias: "CREAM10" },
+                        { id: 1511, nombre: "SNOW MIX", precio_venta: 6000, descripcion: "Camarón - Salmón - Palta - Cebollín", alias: "CREAM11" },
+                        { id: 1512, nombre: "CREAM SMOKE", precio_venta: 5700, descripcion: "Salmón Ahumado - Palta - Cebollín", alias: "CREAM12" },
+                        { id: 1513, nombre: "CREAM LIKE", precio_venta: 5500, descripcion: "Masago - Palmito - Palta", alias: "CREAM13" },
+                        { id: 1514, nombre: "CREAM VEGETAL", precio_venta: 5000, descripcion: "Palmito - Espárrago - Cebollín", alias: "CREAM14" },
+                        { id: 1515, nombre: "CREAM VEGETAL PANKO", precio_venta: 5100, descripcion: "Cebollín Panko - Palta - Pimentón", alias: "CREAM15" },
+                        { id: 1516, nombre: "TUNA CREAM", precio_venta: 6100, descripcion: "Atún - Palta - Palmito", alias: "CREAM16" },
+                        { id: 1517, nombre: "CREAM ACEVICHADO", precio_venta: 8900, descripcion: "Palta - Espárrago - Palmito", alias: "CREAM17" }
+                    ]
+                },
+                {
+                    titulo: "Sake Rolls",
+                    items: [
+                        { id: 1601, nombre: "SAKE KANI", precio_venta: 5900, descripcion: "Kanikama - Palta - Ciboulette", alias: "SAKE1" },
+                        { id: 1602, nombre: "SAKE EBI ROLL", precio_venta: 6400, descripcion: "Camarón - Queso Cream - Masago", alias: "SAKE2" },
+                        { id: 1603, nombre: "SAKE TAKO", precio_venta: 7000, descripcion: "Pulpo - Queso Cream - Cebollín", alias: "SAKE3" },
+                        { id: 1604, nombre: "GARDEN SAKE", precio_venta: 5800, descripcion: "Palmito - Espárrago - Palta", alias: "SAKE4" },
+                        { id: 1605, nombre: "SAKE SMOKE", precio_venta: 6500, descripcion: "Salmón Ahumado - Queso Cream - Palta", alias: "SAKE5" },
+                        { id: 1606, nombre: "SAKE EBI PANKO", precio_venta: 6900, descripcion: "Camarón Panko - Queso Cream - Cebollín", alias: "SAKE6" },
+                        { id: 1607, nombre: "SAKE ACEVICHADO", precio_venta: 9200, descripcion: "Queso Cream - Palta - Palmito", alias: "SAKE7" },
+                        { id: 1608, nombre: "SAKE VEGETAL PANKO", precio_venta: 5900, descripcion: "Cebollín Panko - Queso Cream - Espárrago", alias: "SAKE8" }
+                    ]
+                },
+                {
+                    titulo: "Rolls Sin Arroz",
+                    items: [
+                        { id: 1701, nombre: "Sin Arroz Opción 1", precio_venta: 7900, descripcion: "Salmón - Camarón - Queso Cream - Cebollín - Choclo Baby Panko (Envuelto en Palta)", alias: "SIN1" },
+                        { id: 1702, nombre: "Sin Arroz Opción 2", precio_venta: 7500, descripcion: "Pollo Panko - Palta - Palmito - Cebollín - Pimentón (Envuelto en Queso Cream)", alias: "SIN2" },
+                        { id: 1703, nombre: "Sin Arroz Opción 3", precio_venta: 8000, descripcion: "Camarón Panko - Queso Cream - Masago - Palta - Cebollín (Envuelto en Salmón)", alias: "SIN3" },
+                        { id: 1704, nombre: "Sin Arroz Opción 4", precio_venta: 7600, descripcion: "Pollo Teriyaki - Palta - Nueces - Almendras - Queso Cream - Cebollín (Env. Panko)", alias: "SIN4" },
+                        { id: 1705, nombre: "Sin Arroz Opción 5", precio_venta: 8100, descripcion: "Camarón - Salmón - Queso Cream - Palta - Cebollín (Envuelto en Panko)", alias: "SIN5" }
+                    ]
+                },
+                {
+                    titulo: "Hosomaki",
+                    items: [
+                        { id: 1801, nombre: "HOSO KANI", precio_venta: 3200, descripcion: "Kanikama - Palta", alias: "HOSO1" },
+                        { id: 1802, nombre: "HOSO CHICKEN", precio_venta: 3600, descripcion: "Pollo Teriyaki - Queso Cream - Cebollín", alias: "HOSO2" },
+                        { id: 1803, nombre: "HOSO SAKE", precio_venta: 3900, descripcion: "Salmón - Queso Cream", alias: "HOSO3" },
+                        { id: 1804, nombre: "HOSO EBI", precio_venta: 3700, descripcion: "Camarón - Queso Cream - Ciboulette", alias: "HOSO4" },
+                        { id: 1805, nombre: "HOSO TAKO", precio_venta: 4400, descripcion: "Pulpo - Queso Cream - Cebollín", alias: "HOSO5" },
+                        { id: 1806, nombre: "HOSO SMOKE", precio_venta: 3800, descripcion: "Salmón Ahumado - Palta - Ciboulette", alias: "HOSO6" },
+                        { id: 1807, nombre: "HOSO VEGETAL", precio_venta: 3100, descripcion: "Palmito - Espárrago", alias: "HOSO7" },
+                        { id: 1808, nombre: "HOSO TON", precio_venta: 4100, descripcion: "Atún - Palta", alias: "HOSO8" }
+                    ]
+                },
+                {
+                    titulo: "Futomaki",
+                    items: [
+                        { id: 1901, nombre: "FUTO KANI", precio_venta: 5800, descripcion: "Kanikama - Palta - Pepino - Masago - Cebollín", alias: "FUTO1" },
+                        { id: 1902, nombre: "FUTO CHICKEN", precio_venta: 6500, descripcion: "Pollo Teriyaki - Queso Cream - Palta - Pimentón - Ciboulette", alias: "FUTO2" },
+                        { id: 1903, nombre: "FUTO SAKE", precio_venta: 6800, descripcion: "Salmón - Palmito - Palta - Cebollín - Pimentón", alias: "FUTO3" },
+                        { id: 1904, nombre: "FUTO EBI", precio_venta: 6600, descripcion: "Camarón - Queso Cream - Masago - Palta - Ciboulette", alias: "FUTO4" },
+                        { id: 1905, nombre: "FUTO TAKO", precio_venta: 6900, descripcion: "Pulpo - Queso Cream - Palta - Cebollín - Pimentón", alias: "FUTO5" },
+                        { id: 1906, nombre: "FUTO MIX", precio_venta: 7000, descripcion: "Salmón - Camarón - Palta - Queso Cream - Cebollín", alias: "FUTO6" },
+                        { id: 1907, nombre: "FUTO ACEVICHADO", precio_venta: 9000, descripcion: "Queso Cream - Masago - Palta - Palmito", alias: "FUTO7" },
+                        { id: 1908, nombre: "FUTO SMOKE", precio_venta: 6400, descripcion: "Salmón Ahumado - Palta - Pimentón - Ciboulette - Espárrago", alias: "FUTO8" },
+                        { id: 1909, nombre: "FUTO VEGETAL PANKO", precio_venta: 5700, descripcion: "Cebollín Panko - Queso Cream - Espárrago - Pimentón - Ciboulette", alias: "FUTO9" }
+                    ]
+                },
+                {
+                    titulo: "Special Rolls",
+                    items: [
+                        { id: 2001, nombre: "LIKE EBI TEMPURA", precio_venta: 5800, descripcion: "Camarón - Queso Cream - Ciboulette (Envuelto en Tempura, 8 Cortes)", alias: "SPECIAL1" },
+                        { id: 2002, nombre: "LIKE URA EBI", precio_venta: 6300, descripcion: "Camarón Tempura - Queso Cream - Pimentón (Envuelto en Masago, 8 Cortes)", alias: "SPECIAL2" },
+                        { id: 2003, nombre: "HOSO CHICKEN PANKO", precio_venta: 6000, descripcion: "Pollo Teriyaki - Queso Cream - Cebollín (Envuelto en Nori/Panko, 10 Cortes)", alias: "SPECIAL3" },
+                        { id: 2004, nombre: "MAKI GRAY ROLL", precio_venta: 4500, descripcion: "Queso Cream - Palta - Pepino (Envuelto en Amapola, 8 Cortes)", alias: "SPECIAL4" },
+                        { id: 2005, nombre: "ARMY SMOKE ROLL", precio_venta: 5300, descripcion: "Salmón Ahumado - Queso Cream - Palta (Envuelto en Sésamo/Ciboulette, 8 Cortes)", alias: "SPECIAL5" },
+                        { id: 2006, nombre: "LIKE EBI AVO", precio_venta: 6200, descripcion: "Camarón - Queso Cream - Palmito (Envuelto en Palta, 8 Cortes)", alias: "SPECIAL6" },
+                        { id: 2007, nombre: "HOSO NUSS", precio_venta: 4000, descripcion: "Queso Cream - Nueces/Almendra (Envuelto en Nori/Tempura, 6 Cortes)", alias: "SPECIAL7" },
+                        { id: 2008, nombre: "LIKE AVO CHICKEN", precio_venta: 6500, descripcion: "Pollo Teriyaki - Queso Cream - Palmito (Envuelto en Palta, 8 Cortes)", alias: "SPECIAL8" },
+                        { id: 2009, nombre: "GREEN TONNO FURAI", precio_venta: 6200, descripcion: "Atún Panko - Queso Cream (Envuelto en Ciboulette, 8 Cortes)", alias: "SPECIAL9" },
+                        { id: 2010, nombre: "EBI RAINBOW", precio_venta: 8000, descripcion: "Camarón Panko - Queso Cream - Cebollín (Envuelto en Palta/Salmón, 8 Cortes)", alias: "SPECIAL10" },
+                        { id: 2011, nombre: "SAKE EBI GRILL", precio_venta: 6500, descripcion: "Camarón - Queso Cream - Cebollín (Envuelto en Salmón Grillado, 8 Cortes)", alias: "SPECIAL11" },
+                        { id: 2012, nombre: "COCO TEMPURA", precio_venta: 6500, descripcion: "Salmón - Queso Cream - Pimentón (Envuelto en Tempura/Coco, 8 Cortes)", alias: "SPECIAL12" },
+                        { id: 2013, nombre: "GREEN MIX", precio_venta: 6400, descripcion: "Salmón - Camarón - Queso Cream (Envuelto en Ciboulette, 8 Cortes)", alias: "SPECIAL13" },
+                        { id: 2014, nombre: "CHICKEN CRISPY NUSS", precio_venta: 7400, descripcion: "Pollo Teriyaki - Queso Cream Panko - Ciboulette (Envuelto en Nuez/Almendra, 8 Cortes)", alias: "SPECIAL14" }
+                    ]
+                },
+                {
+                    titulo: "Arroz Gohan",
+                    alerta: "",
+                    tipo: "tarjeta-simple",
+                    items: [
+                        { id: 2101, nombre: "Gohan Mixto", precio_venta: 6990, descripcion: "Base de arroz de sushi con variedad de ingredientes", alias: "GOHAN MIX" },
+                        { id: 2102, nombre: "Gohan Mixto Panko", precio_venta: 7990, descripcion: "Base de arroz con ingredientes apanados", alias: "GOHAN MIX PANKO" },
+                        { id: 2103, nombre: "Gohan Pollo", precio_venta: 6990, descripcion: "Base de arroz con Pollo Teriyaki", alias: "GOHAN POLLO" },
+                        { id: 2104, nombre: "Gohan Pollo Panko", precio_venta: 7990, descripcion: "Base de arroz con Pollo Apanado", alias: "GOHAN POLLO PANKO" },
+                        { id: 2105, nombre: "Gohan Vegetal", precio_venta: 5490, descripcion: "Base de arroz con vegetales frescos", alias: "GOHAN VEG" }
+                    ]
+                },
+                {
+                    titulo: "Handroll",
+                    alerta: "",
+                    tipo: "tarjeta-simple",
+                    items: [
+                        { id: 2201, nombre: "Handroll Pollo", precio_venta: 4500, descripcion: "Pollo - Queso - Cebolllín", alias: "HAND POLLO" },
+                        { id: 2202, nombre: "Handroll Camarón", precio_venta: 4800, descripcion: "Camarón - Queso - Cebolllín", alias: "HAND CAMARON" },
+                        { id: 2203, nombre: "Handroll Vegetal", precio_venta: 4300, descripcion: "Verduras - Palmito - Palta - Cebollín", alias: "HAND VEG" }
+                    ]
+                },
+                {
+                    titulo: "Sushi Burger",
+                    alerta: "",
+                    tipo: "tarjeta-simple",
+                    items: [
+                        { id: 2301, nombre: "Burger Pollo", precio_venta: 7490, descripcion: "Pollo - Queso - Palta - Cebolllín - (Frita en Panko)", alias: "BURGER POLLO" },
+                        { id: 2302, nombre: "Burger Camarón", precio_venta: 7990, descripcion: "Camarón - Queso - Palta - Cebolllín - (Frita en Panko)", alias: "BURGER CAMARON" },
+                        { id: 2303, nombre: "Burger Salmón", precio_venta: 8490, descripcion: "Salmón - Queso - Palta - Cebolllín - (Frita en Panko)", alias: "BURGER SALMON" }
+                    ]
+                },
+                {
+                    titulo: "Sashimis",
+                    alerta: "",
+                    tipo: "tarjeta-simple",
+                    items: [
+                        { id: 2401, nombre: "Sashimi de Salmón (3 Cortes)", precio_venta: 2800, descripcion: "Cortes de salmón fresco", alias: "SASH SALMON 3C" },
+                        { id: 2402, nombre: "Sashimi de Salmón (6 Cortes)", precio_venta: 5000, descripcion: "Cortes de salmón fresco", alias: "SASH SALMON 6C" },
+                        { id: 2403, nombre: "Sashimi de Salmón (12 Cortes)", precio_venta: 9000, descripcion: "Cortes de salmón fresco", alias: "SASH SALMON 12C" },
+                        { id: 2404, nombre: "Sashimi de Pulpo (3 Cortes)", precio_venta: 3400, descripcion: "Cortes de pulpo cocido", alias: "SASH PULPO 3C" },
+                        { id: 2405, nombre: "Sashimi de Pulpo (6 Cortes)", precio_venta: 6000, descripcion: "Cortes de pulpo cocido", alias: "SASH PULPO 6C" },
+                        { id: 2406, nombre: "Sashimi de Pulpo (12 Cortes)", precio_venta: 10500, descripcion: "Cortes de pulpo cocido", alias: "SASH PULPO 12C" }
+                    ]
+                },
+                {
+                    titulo: "Nigiris",
+                    alerta: "",
+                    tipo: "tarjeta-simple",
+                    items: [
+                        { id: 2501, nombre: "Nigiri de Salmón (1 Unidad)", precio_venta: 1000, descripcion: "Bola de arroz con lámina de salmón", alias: "NIGIRI SALMON" },
+                        { id: 2502, nombre: "Nigiri de Camarón (1 Unidad)", precio_venta: 1000, descripcion: "Bola de arroz con camarón abierto", alias: "NIGIRI CAMARON" },
+                        { id: 2503, nombre: "Nigiri de Kanikama (1 Unidad)", precio_venta: 900, descripcion: "Bola de arroz con kanikama", alias: "NIGIRI KANI" }
+                    ]
+                },
+                {
+                    titulo: "Nigiris Crispy",
+                    alerta: "",
+                    tipo: "tarjeta-simple",
+                    items: [
+                        { id: 2601, nombre: "Nigiris Crispy Pollo (4 Unidades)", precio_venta: 4790, descripcion: "Mezcla de arroz - Pollo - Queso Cream - Cebollín", alias: "CRISPY POLLO" },
+                        { id: 2602, nombre: "Nigiris Crispy Camarón (4 Unidades)", precio_venta: 4990, descripcion: "Mezcla de arroz - Camarón - Queso Cream - Cebollín", alias: "CRISPY CAMARON" }
+                    ]
+                },
+                {
+                    titulo: "Snack Tempurizados",
+                    alerta: "",
+                    tipo: "tarjeta-simple",
+                    items: [
+                        { id: 2701, nombre: "Salmón Panko (3 Unidades)", precio_venta: 3000, descripcion: "Snacks crujientes de salmón apanado", alias: "SALMON PANKO 3U" },
+                        { id: 2702, nombre: "Salmón Panko (6 Unidades)", precio_venta: 5500, descripcion: "Snacks crujientes de salmón apanado", alias: "SALMON PANKO 6U" },
+                        { id: 2703, nombre: "Salmón Panko (12 Unidades)", precio_venta: 9900, descripcion: "Snacks crujientes de salmón apanado", alias: "SALMON PANKO 12U" },
+                        { id: 2704, nombre: "Ebi Temp. (3 Unidades)", precio_venta: 2900, descripcion: "Camarones tempura crujientes", alias: "EBI TEMP 3U" },
+                        { id: 2705, nombre: "Ebi Temp. (6 Unidades)", precio_venta: 5400, descripcion: "Camarones tempura crujientes", alias: "EBI TEMP 6U" },
+                        { id: 2706, nombre: "Ebi Temp. (12 Unidades)", precio_venta: 9800, descripcion: "Camarones tempura crujientes", alias: "EBI TEMP 12U" },
+                        { id: 2707, nombre: "Pollo Panko (3 Unidades)", precio_venta: 2800, descripcion: "Bastones de pollo apanados", alias: "POLLO PANKO 3U" },
+                        { id: 2708, nombre: "Pollo Panko (6 Unidades)", precio_venta: 4900, descripcion: "Bastones de pollo apanados", alias: "POLLO PANKO 6U" },
+                        { id: 2709, nombre: "Pollo Panko (12 Unidades)", precio_venta: 9000, descripcion: "Bastones de pollo apanados", alias: "POLLO PANKO 12U" },
+                        { id: 2710, nombre: "Verduras Temp. (3 Unidades)", precio_venta: 2000, descripcion: "Vegetales variados en tempura", alias: "VEG TEMP 3U" },
+                        { id: 2711, nombre: "Verduras Temp. (6 Unidades)", precio_venta: 3600, descripcion: "Vegetales variados en tempura", alias: "VEG TEMP 6U" },
+                        { id: 2712, nombre: "Verduras Temp. (12 Unidades)", precio_venta: 6800, descripcion: "Vegetales variados en tempura", alias: "VEG TEMP 12U" }
+                    ]
+                },
+                {
+                    titulo: "Salsas y Extras",
+                    alerta: "",
+                    tipo: "tarjeta-simple",
+                    items: [
+                        { id: 2801, nombre: "Envoltura Ciboulette", precio_venta: 500, descripcion: "Cambio o extra de envoltura", alias: "EXT CIBOULETTE" },
+                        { id: 2802, nombre: "Palitos", precio_venta: 150, descripcion: "Palitos adicionales", alias: "EXT PALITOS" },
+                        { id: 2803, nombre: "Wasabi", precio_venta: 400, descripcion: "Porción de wasabi picante", alias: "EXT WASABI" },
+                        { id: 2804, nombre: "Sriracha", precio_venta: 500, descripcion: "Salsa picante sriracha", alias: "EXT SRIRACHA" },
+                        { id: 2805, nombre: "Hoja de arroz", precio_venta: 500, descripcion: "Suplemento hoja de arroz", alias: "EXT HOJA ARROZ" },
+                        { id: 2806, nombre: "Ayuda Palitos", precio_venta: 400, descripcion: "Adaptador para palitos", alias: "EXT AYUDA PALOS" },
+                        { id: 2807, nombre: "Jengibre", precio_venta: 400, descripcion: "Porción de jengibre encurtido", alias: "EXT JENGIBRE" },
+                        { id: 2808, nombre: "Salsa Unagui", precio_venta: 900, descripcion: "Salsa dulce de anguila", alias: "EXT UNAGUI" },
+                        { id: 2809, nombre: "Salsa Soya", precio_venta: 500, descripcion: "Salsa de soya tradicional", alias: "EXT SOYA" }
+                    ]
+                },
+                {
+                    titulo: "Bebidas",
+                    alerta: "",
+                    tipo: "tarjeta-simple",
+                    items: [
+                        { id: 2901, nombre: "Coca-Cola Original 1.5L", precio_venta: 3000, descripcion: "Bebida formato de 1.5 litros.", alias: "COCA ORIGINAL 1.5" },
+                        { id: 2902, nombre: "Coca-Cola Zero 1.5L", precio_venta: 3000, descripcion: "Bebida sin azúcar formato de 1.5 litros.", alias: "COCA ZERO 1.5" }
+                    ]
+                }
+            ]
+        };
+
+        function abrirCocina() {
+            window.open('cocina.html', 'MiFudoCocina', 'width=1000,height=700,top=100,left=100');
+        }
+
+        async function inicializarApp() {
+            const res = await fetch(`${API_URL}/inicializar`);
+            baseDatos = await res.json();
+
+            const listaPlanaProductos = [];
+            menuDataEstructurado.categorias.forEach(cat => {
+                cat.items.forEach(item => {
+                    listaPlanaProductos.push({
+                        id: item.id,
+                        nombre: item.nombre,
+                        precio_venta: item.precio_venta,
+                        categoria: cat.titulo,
+                        descripcion: item.descripcion,
+                        alias: item.alias || item.nombre.substring(0, 15)
+                    });
+                });
+            });
+
+            baseDatos.productos = listaPlanaProductos;
+
+            // Renderizar los acordeones iniciales
+            renderizarMenuAcordeon();
+
+            const selectTramo = document.getElementById('tramo_id');
+            selectTramo.innerHTML = baseDatos.tramos.map(t => `
+                <option value="${t.id}" data-precio="${t.precio_envio}">${t.zona} (+$${t.precio_envio})</option>
+            `).join('');
+            actualizarEnvio();
+        }
+
+// Renderiza las categorías estructuradas con el nuevo diseño de tarjeta cuadrada
+function renderizarMenuAcordeon() {
+    const contenedorMenu = document.getElementById('menu-accordion-container');
+    if (!contenedorMenu) return;
+
+    // ¡AQUÍ ESTÁ LA LÍNEA CLAVE! Restaura el formato de cuadrícula/grid para las categorías
+    contenedorMenu.style.display = "grid"; 
+
+    let htmlAcordeon = '';
+    menuDataEstructurado.categorias.forEach((cat, index) => {
+        htmlAcordeon += `
+            <div class="accordion-menu-cat" id="cat-block-${index}">
+                <div class="accordion-menu-header" onclick="toggleAcordeonMenu(${index})">
+                    <span> ${cat.titulo} ${cat.alerta ? `<small style="color:#ef4444; font-size:11px; margin-left:10px;">(${cat.alerta})</small>` : ''}</span>
+                    <span class="flecha-cat" id="flecha-cat-${index}"></span>
+                </div>
+                <div class="accordion-menu-body" id="body-cat-${index}">
+                    <div class="grid-menu">
+                        ${cat.items.map(p => `
+                            <button class="btn-producto" onclick="agregarAlCarrito(${p.id})">
+                                <span class="alias-txt">[${p.alias || 'SUSHI'}]</span>
+                                <span class="nombre-txt">${p.nombre}</span>
+                                <div class="precio">$${p.precio_venta.toLocaleString('es-CL')}</div>
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    contenedorMenu.innerHTML = htmlAcordeon;
+}
+
+function toggleAcordeonMenu(index) {
+    const body = document.getElementById(`body-cat-${index}`);
+    const bloqueCat = document.getElementById(`cat-block-${index}`);
+    const flecha = document.getElementById(`flecha-cat-${index}`);
+    
+    if (!body || !bloqueCat) return;
+
+    // Verificar si ya estaba abierto
+    const estaActivo = body.classList.contains('active');
+
+    // OPCIONAL: Cierra las demás categorías abiertas para mantener el orden cuadrado
+    document.querySelectorAll('.accordion-menu-body').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.accordion-menu-cat').forEach(b => b.classList.remove('expandida'));
+    document.querySelectorAll('.flecha-cat').forEach(f => f.innerText = '');
+
+    // Si no estaba activo, lo abrimos y expandimos el bloque contenedor
+    if (!estaActivo) {
+        body.classList.add('active');
+        bloqueCat.classList.add('expandida');
+        if (flecha) flecha.innerText = '';
+    }
+}
+
+function filtrarMenuYProductos() {
+    const busqueda = document.getElementById('buscador-menu').value.toLowerCase().trim();
+    const contenedorMenu = document.getElementById('menu-accordion-container');
+
+    if (!contenedorMenu) return;
+
+    // Si el buscador está vacío, restauramos el menú normal con las categorías cuadradas
+    if (busqueda === '') {
+        // Aquí debes llamar a la función que dibuja tu menú original
+        renderizarMenuAcordeon(); 
+        return;
+    }
+
+    let productosFiltrados = [];
+    
+    // Recorremos el diseño estructurado para encontrar coincidencias
+    menuDataEstructurado.categorias.forEach(cat => {
+        cat.items.forEach(p => {
+            if (p.nombre.toLowerCase().includes(busqueda) || (p.alias && p.alias.toLowerCase().includes(busqueda))) {
+                productosFiltrados.push(p);
+            }
+        });
+    });
+
+    // Si encontramos productos, reiniciamos el contenedor general para que actúe como bloque libre
+    if (productosFiltrados.length > 0) {
+        // IMPORTANTE: Reseteamos temporalmente el grid de categorías para que no interfiera
+        contenedorMenu.style.display = "block"; 
+
+        contenedorMenu.innerHTML = `
+            <div style="margin-bottom: 15px; font-size: 14px; color: #1e293b; font-weight: bold;">
+                🔍 Resultados de la búsqueda (${productosFiltrados.length}):
+            </div>
+            <div class="grid-menu">
+                ${productosFiltrados.map(p => `
+                    <button class="btn-producto" onclick="agregarAlCarrito(${p.id})">
+                        <span class="alias-txt">[${p.alias || 'SUSHI'}]</span>
+                        <span class="nombre-txt">${p.nombre}</span>
+                        <div class="precio">$${p.precio_venta.toLocaleString('es-CL')}</div>
+                    </button>
+                `).join('')}
+            </div>
+        `;
+    } else {
+        contenedorMenu.style.display = "block";
+        contenedorMenu.innerHTML = `
+            <div style="text-align: center; padding: 30px; color: #64748b; font-size: 14px;">
+                ❌ No se encontraron productos para "${busqueda}".
+            </div>
+        `;
+    }
+}
+
+        async function buscarCliente() {
+            const tel = document.getElementById('tel').value;
+            const btnUltimo = document.getElementById('btn-ultimo-pedido');
+            if(tel.length >= 8) {
+                const res = await fetch(`${API_URL}/clientes/${tel}`);
+                if(res.ok) {
+                    const cliente = await res.json();
+                    document.getElementById('nombre').value = cliente.nombre;
+                    document.getElementById('direccion').value = cliente.direccion;
+                    document.getElementById('indicaciones').value = cliente.indicaciones_entrega || '';
+                    document.getElementById('tramo_id').value = cliente.tramo_delivery_id;
+                    actualizarEnvio();
+                    if(btnUltimo) btnUltimo.style.display = 'inline-block';
+                } else {
+                    if(btnUltimo) btnUltimo.style.display = 'none';
+                }
+            } else {
+                if(btnUltimo) btnUltimo.style.display = 'none';
+            }
+        }
+
+        async function cargarUltimoPedido() {
+            const tel = document.getElementById('tel').value;
+            if(!tel) return alert("⚠️ Ingrese un teléfono válido.");
+            
+            try {
+                const res = await fetch(`${API_URL}/pedidos/ultimo/${tel}`);
+                if(res.status === 404) return alert("🔍 No se encontraron pedidos anteriores para este cliente.");
+                if(!res.ok) return alert("Error al consultar el servidor.");
+                
+                const ultimo = await res.json();
+                if(ultimo && ultimo.items) {
+                    carrito = ultimo.items.map(i => ({
+                        producto_id: i.producto_id,
+                        nombre: i.nombre || 'Producto',
+                        precio_venta: i.precio_venta || i.precio_unitario,
+                        cantidad: i.cantidad
+                    }));
+                    
+                    document.getElementById('tipo_pedido').value = ultimo.tipo_pedido;
+                    toggleDelivery();
+                    
+                    if(ultimo.tipo_pedido === 'DELIVERY' || ultimo.tipo_pedido === 'delivery') {
+                        document.getElementById('tramo_id').value = ultimo.tramo_delivery_id || '';
+                        document.getElementById('direccion').value = ultimo.direccion || '';
+                        document.getElementById('indicaciones').value = ultimo.indicaciones_entrega || '';
+                        actualizarEnvio();
+                    }
+                    
+                    document.getElementById('metodo_pago').value = ultimo.metodo_pago || 'efectivo';
+                    document.getElementById('descuento_porcentaje').value = ultimo.descuento_porcentaje || '0';
+                    renderCarrito();
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Fallo al obtener el último pedido histórico.");
+            }
+        }
+
+        async function guardarClienteSolo() {
+            const telephone = document.getElementById('tel').value;
+            const nombre = document.getElementById('nombre').value;
+            const direccion = document.getElementById('direccion').value;
+            const indicaciones_entrega = document.getElementById('indicaciones').value;
+            const tramo_delivery_id = document.getElementById('tramo_id').value;
+            if(!telephone || !nombre) return alert("⚠️ Se necesita Teléfono y Nombre.");
+            const res = await fetch(`${API_URL}/clientes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ telephone, nombre, direccion, indicaciones_entrega, tramo_delivery_id })
+            });
+            if(res.ok) { alert("✨ ¡Cliente guardado con éxito!"); }
+        }
+
+        function abrirAjustes() { document.getElementById('modal-ajustes').style.display = 'flex'; cargarHistorialPedidos(); }
+        function cerrarAjustes() { document.getElementById('modal-ajustes').style.display = 'none'; }
+
+        function cambiarTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        async function cargarHistorialPedidos() {
+            const res = await fetch(`${API_URL}/pedidos`);
+            if(!res.ok) return;
+            const pedidos = await res.json();
+            const contenedor = document.getElementById('historial-agrupado-container');
+            
+            if(pedidos.length === 0) {
+                contenedor.innerHTML = `<div style="text-align:center; color:#666; padding:20px;">No hay pedidos registrados hoy.</div>`;
+                return;
+            }
+
+            pedidos.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+            const grupos = {};
+            pedidos.forEach(p => {
+                const diaClave = new Date(p.fecha).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                if(!grupos[diaClave]) grupos[diaClave] = [];
+                grupos[diaClave].push(p);
+            });
+
+            const diasOrdenados = Object.keys(grupos).sort((a, b) => {
+                const [diaA, mesA, anioA] = a.split('/');
+                const [diaB, mesB, anioB] = b.split('/');
+                return new Date(anioB, mesB - 1, diaB) - new Date(anioA, mesA - 1, diaA);
+            });
+
+            contenedor.innerHTML = diasOrdenados.map((dia, idxDia) => {
+                const pedidosDelDia = grupos[dia];
+                const filasTabla = pedidosDelDia.map((p, index) => {
+                    const hora = new Date(p.fecha).toLocaleString([], { hour: '2-digit', minute: '2-digit' });
+                    const numeroDiario = index + 1;
+                    const pedidoRaw = btoa(unescape(encodeURIComponent(JSON.stringify(p))));
+                    return `
+                        <tr>
+                            <td><strong>#${numeroDiario}</strong> <small style="color:#888;">(ID: ${p.id})</small></td>
+                            <td>${hora}</td>
+                            <td>${p.cliente_nombre || 'Cliente Ocasional'}</td>
+                            <td><span style="background:#eee; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:11px;">${p.tipo_pedido}</span></td>
+                            <td><small>${p.metodo_pago}</small></td>
+                            <td><strong>$${p.total_cobrado.toLocaleString('es-CL')}</strong></td>
+                            <td><button class="btn-reimprimir" onclick="reimprimirTicketDesdeHistorial('${pedidoRaw}')">🖨️ Reimprimir</button></td>
+                        </tr>
+                    `;
+                }).join('');
+
+                return `
+                    <div class="accordion-dia">
+                        <div class="accordion-header" onclick="toggleAcordeon(this, 'body-dia-${idxDia}')">
+                            <span>📅 ${dia} (${pedidosDelDia.length} pedidos)</span>
+                            <span class="icon-flecha">►</span>
+                        </div>
+                        <div class="accordion-body" id="body-dia-${idxDia}">
+                            <table class="historial-table">
+                                <thead>
+                                    <tr>
+                                        <th>N° Día</th>
+                                        <th>Hora</th>
+                                        <th>Cliente</th>
+                                        <th>Tipo</th>
+                                        <th>Pago</th>
+                                        <th>Total</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${filasTabla}</tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleAcordeon(headerElement, bodyId) {
+            const body = document.getElementById(bodyId);
+            const flecha = headerElement.querySelector('.icon-flecha');
+            if(body.style.display === 'block') {
+                body.style.display = 'none';
+                flecha.innerText = '►';
+            } else {
+                body.style.display = 'block';
+                flecha.innerText = '▼';
+            }
+        }
+
+        function reimprimirTicketDesdeHistorial(encodedPedido) {
+            try {
+                const pedido = JSON.parse(decodeURIComponent(escape(atob(encodedPedido))));
+                const divTicket = document.getElementById('ticket-impresion');
+                const hora = new Date(pedido.fecha).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+                const itemsHtml = (pedido.items || []).map(c => `
+                    <div class="ticket-row" style="font-weight: bold; font-size: 1.2em; margin: 5px 0; text-transform: uppercase;">
+                        <span>[ ] ${c.cantidad}x ${c.nombre || 'Producto'}</span>
+                    </div>
+                `).join('');
+
+                divTicket.innerHTML = `
+                    <div class="ticket-header">
+                        <h2>*** COMANDA COCINA ***</h2>
+                        <h3>(REIMPRESIÓN COPIA)</h3>
+                        <div style="margin-top:5px;">Pedido: <strong>#${pedido.id}</strong></div>
+                        <div>Hora: ${hora} | Tipo: <strong>${pedido.tipo_pedido}</strong></div>
+                        ${pedido.cliente_nombre ? `<div>Cliente: ${pedido.cliente_nombre}</div>` : ''}
+                        ${pedido.tipo_pedido === 'DELIVERY' ? `<div>Dir: ${pedido.direccion || ''}</div>` : ''}
+                    </div>
+                    <div class="ticket-items">${itemsHtml}</div>
+                    <div class="ticket-footer">
+                        <div>Monto Total Cobrado: $${pedido.total_cobrado.toLocaleString('es-CL')}</div>
+                    </div>
+                `;
+                setTimeout(() => { 
+                    window.print(); 
+                    setTimeout(() => { divTicket.innerHTML = ''; }, 300); 
+                }, 100);
+            } catch (err) {
+                console.error("Error al reimprimir:", err);
+                alert("No se pudo cargar el ticket.");
+            }
+        }
+        
+        function toggleDelivery() {
+            const tipo = document.getElementById('tipo_pedido').value;
+            const esRetiro = tipo === 'RETIRO';
+            document.getElementById('grupo-tramo').style.display = esRetiro ? 'none' : 'flex';
+            document.getElementById('grupo-dir').style.display = esRetiro ? 'none' : 'flex';
+            document.getElementById('grupo-ind').style.display = esRetiro ? 'none' : 'flex';
+            const opcionTramo = document.getElementById('tramo_id').selectedOptions[0];
+            costoEnvioActual = (esRetiro || !opcionTramo) ? 0 : parseFloat(opcionTramo.getAttribute('data-precio'));
+            calcularTotales();
+        }
+
+        function actualizarEnvio() {
+            const opcionTramo = document.getElementById('tramo_id').selectedOptions[0];
+            costoEnvioActual = (document.getElementById('tipo_pedido').value === 'DELIVERY' && opcionTramo) ? parseFloat(opcionTramo.getAttribute('data-precio')) : 0;
+            calcularTotales();
+        }
+
+        function agregarAlCarrito(id) {
+            const prod = baseDatos.productos.find(p => p.id === id);
+            const item = carrito.find(c => c.producto_id === id);
+            if(item) { item.cantidad++; } 
+            else { carrito.push({ producto_id: prod.id, nombre: prod.nombre, precio_venta: prod.precio_venta, cantidad: 1 }); }
+            renderCarrito();
+        }
+
+        function alterarCantidad(id, cambio) {
+            const item = carrito.find(c => c.producto_id === id);
+            if(item) {
+                item.cantidad += cambio;
+                if(item.cantidad <= 0) carrito = carrito.filter(c => c.producto_id !== id);
+            }
+            renderCarrito();
+        }
+
+        function renderCarrito() {
+            const contenedor = document.getElementById('carrito-items');
+            contenedor.innerHTML = carrito.map(c => `
+                <div class="item-row">
+                    <div>
+                        <strong style="font-weight: 800;">${c.nombre}</strong><br>
+                        <small>$${c.precio_venta.toLocaleString('es-CL')} c/u</small>
+                    </div>
+                    <div class="item-controls">
+                        <button onclick="alterarCantidad(${c.producto_id}, -1)">-</button>
+                        <span style="margin: 0 5px;">${c.cantidad}</span>
+                        <button onclick="alterarCantidad(${c.producto_id}, 1)">+</button>
+                    </div>
+                </div>
+            `).join('');
+            calcularTotales();
+        }
+
+        function calcularTotales() {
+            const subtotal = carrito.reduce((acc, c) => acc + (c.precio_venta * c.cantidad), 0);
+            const totalPreDescuento = subtotal + costoEnvioActual;
+            const pctDescuento = parseFloat(document.getElementById('descuento_porcentaje').value);
+            const rebaja = Math.round(totalPreDescuento * (pctDescuento / 100));
+            const totalFinal = totalPreDescuento - rebaja;
+            document.getElementById('lbl-subtotal').innerText = `$${subtotal.toLocaleString('es-CL')}`;
+            document.getElementById('lbl-envio').innerText = `$${costoEnvioActual.toLocaleString('es-CL')}`;
+            const contenedorDescuento = document.getElementById('row-descuento');
+            if(pctDescuento > 0) {
+                document.getElementById('lbl-descuento').innerText = `-$${rebaja.toLocaleString('es-CL')} (${pctDescuento}%)`;
+                contenedorDescuento.style.display = 'flex';
+            } else {
+                contenedorDescuento.style.display = 'none';
+            }
+            document.getElementById('lbl-total').innerText = `$${totalFinal.toLocaleString('es-CL')}`;
+        }
+
+async function enviarPedido() {
+    if (carrito.length === 0) return alert("Agrega al menos un producto.");
+    const subtotal = carrito.reduce((acc, c) => acc + ((c.precio_venta || c.precio || 0) * (c.cantidad || 1)), 0);
+    const totalPreDescuento = subtotal + (costoEnvioActual || 0);
+    const pctDescuento = parseFloat(document.getElementById('descuento_porcentaje').value) || 0;
+    const rebaja = Math.round(totalPreDescuento * (pctDescuento / 100));
+    const totalFinal = totalPreDescuento - rebaja;
+
+    const tipoPedido = document.getElementById('tipo_pedido').value;
+    const tramoIdFinal = tipoPedido === 'RETIRO' ? null : (document.getElementById('tramo_id').value || null);
+
+// --- CORRECCIÓN EN enviarPedido ---
+const itemsFormateados = carrito.map(c => ({
+    producto_id: Number(c.id || c.producto_id || 0), 
+    cantidad: Number(c.cantidad || 1),
+    precio_unitario: Number(c.precio_venta || c.precio || 0),
+    nombre: String(c.nombre || c.nombre_producto || 'Producto') // <--- Esto es lo que faltaba
+}));
+
+    const payload = {
+        telefono: String(document.getElementById('tel').value || ''),
+        nombre: String(document.getElementById('nombre').value || 'Cliente Anónimo'),
+        tipo_pedido: String(tipoPedido || 'LOCAL'),
+        tramo_delivery_id: tramoIdFinal ? Number(tramoIdFinal) : null, 
+        direccion: String(tipoPedido === 'RETIRO' ? '' : (document.getElementById('direccion').value || '')),
+        indicaciones: String(tipoPedido === 'RETIRO' ? '' : (document.getElementById('indicaciones').value || '')),
+        metodo_pago: String(document.getElementById('metodo_pago').value || 'EFECTIVO'),
+        costo_delivery: Number(costoEnvioActual || 0),
+        descuento_porcentaje: Number(pctDescuento),
+        total_cobrado: Number(totalFinal),
+        items: itemsFormateados
+    };
+
+    // ALERTA DE DIAGNÓSTICO: Te mostrará en la app qué estás enviando antes de que falle D1
+    console.log("PAYLOAD COMPLETO:", payload);
+
+    try {
+        const res = await fetch(`${API_URL}/pedidos`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+            const pedidoCodificado = btoa(unescape(encodeURIComponent(JSON.stringify(data.pedido))));
+            reimprimirTicketDesdeHistorial(pedidoCodificado);
+            carrito = [];
+            renderCarrito();
+            cerrarAjustes();
+            document.getElementById('btn-ultimo-pedido').style.display = 'none';
+        } else {
+            // Si el backend falla, te alertará con el mensaje del servidor
+            alert("❌ Error del Servidor:\n" + JSON.stringify(data));
+        }
+    } catch (err) {
+        alert("❌ Fallo de conexión o error D1 en la petición.");
+    }
+}
+
+        async function crearProductoAjuste() {
+            const nombre = document.getElementById('ajuste-prod-nombre').value;
+            const precio_venta = parseFloat(document.getElementById('ajuste-prod-precio').value);
+            const categoria = document.getElementById('ajuste-prod-cat').value;
+            await fetch(`${API_URL}/productos`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre, precio_venta, categoria })
+            });
+            alert("¡Producto Creado!");
+            inicializarApp();
+        }
+
+        async function crearTramoAjuste() {
+            const zona = document.getElementById('ajuste-tramo-zona').value;
+            const precio_envio = parseFloat(document.getElementById('ajuste-tramo-precio').value);
+            await fetch(`${API_URL}/tramos`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ zona, precio_envio })
+            });
+            alert("¡Zona de Envío Creada!");
+            inicializarApp();
+        }
+
+        inicializarApp();
+    </script>
+</body>
+</html>

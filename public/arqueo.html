@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arqueo de Caja - Control Diario</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --gray-bg: #f8fafc;
+            --border: #e2e8f0;
+            --text: #1e293b;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--gray-bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+
+        .estado-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        .bg-abierto { background-color: #dcfce7; color: var(--success); }
+        .bg-cerrado { background-color: #fee2e2; color: var(--danger); }
+
+        /* Pantalla de Apertura */
+        .card-apertura {
+            background: white;
+            max-width: 450px;
+            margin: 60px auto;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        /* Pantalla de Caja Activa / Formulario */
+        .grid-arqueo {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-arqueo { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .card h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+            color: #475569;
+        }
+
+        .fila-valor {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 1.05em;
+        }
+
+        .fila-total {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px dashed var(--border);
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #475569;
+        }
+
+        .input-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 1.1em;
+            box-sizing: border-box;
+        }
+
+        .input-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-success { background: var(--success); color: white; margin-top: 20px; }
+        .btn-success:hover { background: #15803d; }
+
+        .diferencia-box {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 1.4em;
+            font-weight: bold;
+        }
+        .diff-neutral { background: #f1f5f9; color: #475569; }
+        .diff-ok { background: #dcfce7; color: var(--success); }
+        .diff-error { background: #fee2e2; color: var(--danger); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>Arqueo de Caja Diario</h2>
+        <span id="caja-estado-badge" class="estado-badge bg-cerrado">Cargando...</span>
+    </div>
+
+    <div id="seccion-apertura" class="card-apertura" style="display: none;">
+        <h3>La caja está cerrada</h3>
+        <p>Introduce el monto en efectivo con el que inicias el turno hoy.</p>
+        <div class="input-group" style="margin: 25px 0;">
+            <input type="number" id="monto-inicial-input" class="input-control" placeholder="Ej: 50000" min="0">
+        </div>
+        <button class="btn btn-primary" onclick="abrirCaja()">Abrir Caja Nueva</button>
+    </div>
+
+    <div id="seccion-arqueo" class="grid-arqueo" style="display: none;">
+        
+        <div class="card">
+            <h3>VALORES DEL SISTEMA</h3>
+            <div class="fila-valor"><span>Monto Inicial:</span> <strong id="sis-inicial">$0</strong></div>
+            <div style="margin-top: 15px; font-weight: bold; color: #64748b; font-size: 0.9em;">INGRESOS POR PEDIDOS</div>
+            <div class="fila-valor" style="padding-left: 10px;"><span>↳ Efectivo:</span> <span id="sis-efectivo">$0</span></div>
+            <div class="fila-valor" style="padding-left: 10px;"><span>↳ Tarjeta Débito:</span> <span id="sis-debito">$0</span></div>
+            <div class="fila-valor" style="padding-left: 10px;"><span>↳ Tarjeta Crédito:</span> <span id="sis-credito">$0</span></div>
+            <div class="fila-valor" style="padding-left: 10px;"><span>↳ Transferencia:</span> <span id="sis-transf">$0</span></div>
+            
+            <div class="input-group" style="margin-top: 20px;">
+                <label>EGRESOS (Gastos de caja hoy):</label>
+                <input type="number" id="egresos-input" class="input-control" value="0" min="0" oninput="calcularTodo()">
+            </div>
+
+            <div class="fila-total">
+                <span>Debería haber (Total):</span>
+                <span id="sis-total">$0</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>SEGÚN USUARIO (Dinero Real)</h3>
+            <div class="input-group">
+                <label>Efectivo Físico:</label>
+                <input type="number" id="usr-efectivo" class="input-control" value="0" min="0" oninput="calcularTodo()">
+            </div>
+            <div class="input-group">
+                <label>Tarjeta Débito (Vouchers Redelcom/Transbank):</label>
+                <input type="number" id="usr-debito" class="input-control" value="0" min="0" oninput="calcularTodo()">
+            </div>
+            <div class="input-group">
+                <label>Tarjeta Crédito (Vouchers Redelcom/Transbank):</label>
+                <input type="number" id="usr-credito" class="input-control" value="0" min="0" oninput="calcularTodo()">
+            </div>
+            <div class="input-group">
+                <label>Transferencias Recibidas:</label>
+                <input type="number" id="usr-transf" class="input-control" value="0" min="0" oninput="calcularTodo()">
+            </div>
+
+            <div class="fila-total">
+                <span>Total Declarado:</span>
+                <span id="usr-total">$0</span>
+            </div>
+        </div>
+
+        <div id="caja-diferencia" class="diferencia-box diff-neutral">
+            Diferencia: <span id="diferencia-valor">$0</span>
+            <div id="diferencia-mensaje" style="font-size: 0.6em; font-weight: normal; margin-top: 5px;">Cuadrado</div>
+        </div>
+
+        <div style="grid-column: 1 / -1; text-align: right;">
+            <button class="btn btn-success" style="width: auto; padding: 12px 40px;" onclick="cerrarCaja()">Finalizar Turno y Cerrar Caja</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Seguridad: Si no hay sesión activa, lo expulsa de inmediato al login
+if (!document.cookie.includes('sesion_activa=true')) {
+    window.location.href = '/login.html';
+}
+
+    let sistemaData = {
+        monto_inicial: 0,
+        efectivo: 0,
+        debito: 0,
+        credito: 0,
+        transferencia: 0,
+        total_sistema: 0
+    };
+
+    window.addEventListener('DOMContentLoaded', verificarEstadoCaja);
+
+    async function verificarEstadoCaja() {
+        try {
+            // 1. Consultar estado de la caja
+            const resCaja = await fetch('/api/arqueo/estado');
+            const dataCaja = await resCaja.json();
+            
+            const badge = document.getElementById('caja-estado-badge');
+            
+            if (dataCaja.abierto) {
+                badge.innerText = "CAJA ABIERTA";
+                badge.className = "estado-badge bg-abierto";
+                
+                document.getElementById('seccion-apertura').style.display = 'none';
+                document.getElementById('seccion-arqueo').style.display = 'grid';
+
+                // Guardar monto inicial asignado
+                sistemaData.monto_inicial = dataCaja.arqueo.monto_inicial || 0;
+                
+                // 2. INTEGRACIÓN DIRECTA CON EL HISTORIAL DE PEDIDOS
+                const resPedidos = await fetch('/api/pedidos');
+                const pedidos = await resPedidos.json();
+
+                // Identificar marca de tiempo de apertura de esta caja para filtrar
+                const fechaApertura = dataCaja.arqueo.fecha || dataCaja.arqueo.fecha_apertura || dataCaja.arqueo.created_at;
+
+                // Filtrar el historial: solo entran pedidos completados DESPUÉS de abrir la caja
+                const pedidosDelTurno = pedidos.filter(p => {
+                    if (!fechaApertura) return true; // Si no hay fecha registrada, preventivamente lee todos
+                    return new Date(p.fecha) >= new Date(fechaApertura);
+                });
+
+                // Resetear acumuladores del sistema para recalcular desde cero
+                sistemaData.efectivo = 0;
+                sistemaData.debito = 0;
+                sistemaData.credito = 0;
+                sistemaData.transferencia = 0;
+
+                // Clasificar montos según el método de pago guardado
+                pedidosDelTurno.forEach(p => {
+                    const met = p.metodo_pago ? p.metodo_pago.toLowerCase() : '';
+                    const total = parseFloat(p.total_cobrado) || 0;
+
+                    if (met.includes('efectivo')) {
+                        sistemaData.efectivo += total;
+                    } else if (met.includes('debito')) {
+                        sistemaData.debito += total;
+                    } else if (met.includes('credito')) {
+                        sistemaData.credito += total;
+                    } else if (met.includes('tarjeta')) {
+                        // Respaldo por si quedó algún registro viejo guardado como "tarjeta" general
+                        sistemaData.debito += total;
+                    } else if (met.includes('transf') || met.includes('transferencia')) {
+                        sistemaData.transferencia += total;
+                    }
+                });
+
+                // Renderizar los datos calculados dinámicamente desde el historial
+                document.getElementById('sis-inicial').innerText = formatDinero(sistemaData.monto_inicial);
+                document.getElementById('sis-efectivo').innerText = formatDinero(sistemaData.efectivo);
+                document.getElementById('sis-debito').innerText = formatDinero(sistemaData.debito);
+                document.getElementById('sis-credito').innerText = formatDinero(sistemaData.credito);
+                document.getElementById('sis-transf').innerText = formatDinero(sistemaData.transferencia);
+
+                calcularTodo();
+            } else {
+                badge.innerText = "CAJA CERRADA";
+                badge.className = "estado-badge bg-cerrado";
+                document.getElementById('seccion-apertura').style.display = 'block';
+                document.getElementById('seccion-arqueo').style.display = 'none';
+            }
+        } catch (err) {
+            console.error("Error al sincronizar caja con el historial:", err);
+        }
+    }
+
+    function calcularTodo() {
+        const egresos = parseFloat(document.getElementById('egresos-input').value) || 0;
+
+        // El efectivo teórico del sistema suma el monto_inicial de apertura + las ventas en efectivo
+        const totalSistemaEfectivo = sistemaData.monto_inicial + sistemaData.efectivo;
+        
+        // Sumamos débito y crédito por separado en la fórmula final del balance interno
+        const totalDeberiaHaber = totalSistemaEfectivo + sistemaData.debito + sistemaData.credito + sistemaData.transferencia - egresos;
+        document.getElementById('sis-total').innerText = formatDinero(totalDeberiaHaber);
+
+        const usrEfe = parseFloat(document.getElementById('usr-efectivo').value) || 0;
+        const usrDeb = parseFloat(document.getElementById('usr-debito').value) || 0;
+        const usrCre = parseFloat(document.getElementById('usr-credito').value) || 0;
+        const usrTra = parseFloat(document.getElementById('usr-transf').value) || 0;
+        
+        const totalUsuario = usrEfe + usrDeb + usrCre + usrTra;
+        document.getElementById('usr-total').innerText = formatDinero(totalUsuario);
+
+        const diferencia = totalUsuario - totalDeberiaHaber;
+        const diffBox = document.getElementById('caja-diferencia');
+        const diffVal = document.getElementById('diferencia-valor');
+        const diffMsg = document.getElementById('diferencia-mensaje');
+
+        diffVal.innerText = formatDinero(diferencia);
+
+        if (diferencia === 0) {
+            diffBox.className = "diferencia-box diff-ok";
+            diffMsg.innerText = "Caja Perfecta (Cuadrada)";
+        } else if (diferencia > 0) {
+            diffBox.className = "diferencia-box diff-ok";
+            diffMsg.innerText = `Dinero a FAVOR (Sobra: ${formatDinero(diferencia)})`;
+        } else {
+            diffBox.className = "diferencia-box diff-error";
+            diffMsg.innerText = `Dinero en CONTRA (Falta: ${formatDinero(Math.abs(diferencia))})`;
+        }
+    }
+
+    async function abrirCaja() {
+        const monto = parseFloat(document.getElementById('monto-inicial-input').value);
+        if (isNaN(monto) || monto < 0) {
+            alert("Por favor, ingresa un monto inicial válido.");
+            return;
+        }
+
+        const res = await fetch('/api/arqueo/abrir', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ monto_inicial: monto })
+        });
+
+        if (res.ok) {
+            alert("¡Caja abierta con éxito! Ya puedes operar.");
+            verificarEstadoCaja();
+        } else {
+            alert("Error al abrir caja.");
+        }
+    }
+
+    async function cerrarCaja() {
+        if (!confirm("¿Estás seguro de que deseas finalizar el turno y cerrar la caja? Esta acción no se puede deshacer.")) {
+            return;
+        }
+
+        const egresos = parseFloat(document.getElementById('egresos-input').value) || 0;
+        const usrEfe = parseFloat(document.getElementById('usr-efectivo').value) || 0;
+        const usrDeb = parseFloat(document.getElementById('usr-debito').value) || 0;
+        const usrCre = parseFloat(document.getElementById('usr-credito').value) || 0;
+        const usrTra = parseFloat(document.getElementById('usr-transf').value) || 0;
+
+        const totalSistemaEfectivo = sistemaData.monto_inicial + sistemaData.efectivo;
+        const totalDeberiaHaber = totalSistemaEfectivo + sistemaData.debito + sistemaData.credito + sistemaData.transferencia - egresos;
+        const totalUsuario = usrEfe + usrDeb + usrCre + usrTra;
+        const diferenciaFinal = totalUsuario - totalDeberiaHaber;
+
+        // --- SOLUCIÓN PUNTO 12 INTEGRADA AQUÍ ---
+        // Combinamos Débito y Crédito para adaptarnos al formato antiguo que espera tu servidor
+        const sumatoriaTarjetaUsuario = usrDeb + usrCre;
+        const sumatoriaTarjetaSistema = sistemaData.debito + sistemaData.credito;
+
+        const payload = {
+            usuario_efectivo: usrEfe,
+            usuario_tarjeta: sumatoriaTarjetaUsuario, // Servidor recibe la suma total
+            usuario_transferencia: usrTra,
+            total_sistema_efectivo: totalSistemaEfectivo,
+            total_sistema_tarjeta: sumatoriaTarjetaSistema, // Servidor recibe la suma total
+            total_sistema_transferencia: sistemaData.transferencia,
+            total_egresos: egresos,
+            diferencia: diferenciaFinal
+        };
+
+        const res = await fetch('/api/arqueo/cerrar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            alert("Caja cerrada de forma segura. El día ha terminado.");
+            verificarEstadoCaja();
+        } else {
+            alert("Hubo un error al intentar cerrar la caja.");
+        }
+    }
+
+    function formatDinero(valor) {
+        return '$' + Math.round(valor).toLocaleString('es-CL');
+    }
+</script>
+</body>
+</html>
