@@ -393,16 +393,69 @@
 
     <div id="ticket-impresion"></div>
 
+    <div class="modal" id="modal-login">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Iniciar sesión</h2>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+                <input type="text" id="login-usuario" placeholder="Usuario" value="admin">
+                <input type="password" id="login-contrasena" placeholder="Contraseña" value="">
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <button class="btn-submit" onclick="loginApi()">Entrar</button>
+                    <div id="login-error" style="color:#e74c3c;font-weight:700;display:none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // No redirigir automáticamente a /login.html al cargar la página.
-        // Esto impedía ver la app al entrar desde el enlace (Cloudflare/preview).
-        // Si se requiere, restaurar la redirección o implementar una comprobación
-        // que muestre un modal de login en lugar de forzar la navegación.
-        /*
-        if (!document.cookie.includes('sesion_activa=true')) {
-            window.location.href = '/login.html';
+        // Mostrar un modal de login en lugar de redirigir.
+        // Esto permite que la página cargue (útil para previews) pero exige autenticación.
+        const API_URL = '/api';
+
+        function showLogin() {
+            const m = document.getElementById('modal-login');
+            if (m) m.style.display = 'flex';
         }
-        */
+
+        function hideLogin() {
+            const m = document.getElementById('modal-login');
+            if (m) m.style.display = 'none';
+        }
+
+        async function loginApi() {
+            const usuario = document.getElementById('login-usuario').value;
+            const contrasena = document.getElementById('login-contrasena').value;
+            const err = document.getElementById('login-error');
+            err.style.display = 'none';
+            try {
+                const res = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usuario, contrasena })
+                });
+                if (res.ok) {
+                    // El servidor establece la cookie httpOnly; recargar para aplicar sesión
+                    location.reload();
+                } else {
+                    err.innerText = 'Credenciales inválidas';
+                    err.style.display = 'block';
+                }
+            } catch (e) {
+                err.innerText = 'Error de conexión';
+                err.style.display = 'block';
+            }
+        }
+
+        // Al cargar la página, si no hay cookie de sesión mostramos el modal.
+        (function() {
+            if (!document.cookie.includes('sesion_activa=true')) {
+                // Esperar un tick para que el DOM esté listo
+                setTimeout(showLogin, 50);
+            }
+        })();
+
 
         const API_URL = '/api';
         let baseDatos = { productos: [], tramos: [] };
